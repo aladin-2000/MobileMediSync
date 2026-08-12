@@ -5,7 +5,6 @@ import {
   StyleSheet,
   TextInput,
   TouchableOpacity,
-  Alert,
   ActivityIndicator,
   KeyboardAvoidingView,
   ScrollView,
@@ -13,6 +12,7 @@ import {
 } from "react-native";
 import { router } from "expo-router";
 import { useAuth } from "../context/AuthContext";
+import useConfirmModal from "../hooks/useConfirmModal";
 
 export default function Index() {
   const { login } = useAuth();
@@ -20,6 +20,7 @@ export default function Index() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const { confirm, notify, modal } = useConfirmModal();
 
   const handleLogin = async () => {
     setLoading(true);
@@ -36,12 +37,16 @@ export default function Index() {
       }
     } catch (error) {
       if (error.message?.includes("vérifier votre adresse email")) {
-        Alert.alert("Erreur", error.message, [
-          { text: "Fermer", style: "cancel" },
-          { text: "Vérifier mon email", onPress: () => router.push("/verifier-email") },
-        ]);
+        const goVerify = await confirm({
+          title: "Erreur",
+          message: error.message,
+          variant: "warning",
+          confirmText: "Vérifier mon email",
+          cancelText: "Fermer",
+        });
+        if (goVerify) router.push("/verifier-email");
       } else {
-        Alert.alert("Erreur", error.message);
+        notify({ title: "Erreur", message: error.message, variant: "error" });
       }
     } finally {
       setLoading(false);
@@ -134,6 +139,8 @@ export default function Index() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {modal}
     </View>
   );
 }

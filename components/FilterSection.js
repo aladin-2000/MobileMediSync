@@ -54,17 +54,21 @@ export default function FilterSection({ filters, onFilterChange, onReset, onAppl
     onFilterChange(editingTimeField, value);
   };
 
-  // Same button shown either above or below "Appliquer" depending on expanded state
-  const toggleButton = (
-    <TouchableOpacity
-      style={styles.expandToggle}
-      onPress={() => setExpanded(!expanded)}
-      activeOpacity={0.7}
-    >
-      <Text style={styles.expandToggleText}>
-        {expanded ? 'Moins de filtres ▲' : 'Plus de filtres ▼'}
-      </Text>
-    </TouchableOpacity>
+  // "Plus/Moins de filtres" toggle, with a subtle "Réinitialiser" link next to it once expanded
+  // (no more a full-width red button competing visually with "Lancer la recherche").
+  const toggleRow = (
+    <View style={styles.toggleRow}>
+      <TouchableOpacity onPress={() => setExpanded(!expanded)} activeOpacity={0.7}>
+        <Text style={styles.expandToggleText}>
+          {expanded ? 'Moins de filtres ▲' : 'Plus de filtres ▼'}
+        </Text>
+      </TouchableOpacity>
+      {expanded && (
+        <TouchableOpacity onPress={onReset} activeOpacity={0.7}>
+          <Text style={styles.resetLinkText}>Réinitialiser</Text>
+        </TouchableOpacity>
+      )}
+    </View>
   );
 
   return (
@@ -86,8 +90,7 @@ export default function FilterSection({ filters, onFilterChange, onReset, onAppl
         <Text style={styles.pastDateWarning}>⚠️ Cette date est déjà passée.</Text>
       )}
 
-      {/* More/Less filters toggle - shown above only when collapsed */}
-      {!expanded && toggleButton}
+      {toggleRow}
 
       {expanded && (
         <>
@@ -143,10 +146,6 @@ export default function FilterSection({ filters, onFilterChange, onReset, onAppl
             </TouchableOpacity>
           </View>
 
-          {/* Reset button */}
-          <TouchableOpacity style={styles.resetButton} onPress={onReset} activeOpacity={0.8}>
-            <Text style={styles.resetButtonText}>Réinitialiser tous les filtres</Text>
-          </TouchableOpacity>
         </>
       )}
 
@@ -157,11 +156,8 @@ export default function FilterSection({ filters, onFilterChange, onReset, onAppl
         disabled={isPastDate}
         activeOpacity={0.8}
       >
-        <Text style={styles.applyButtonText}>Appliquer les filtres</Text>
+        <Text style={styles.applyButtonText}>Lancer la recherche</Text>
       </TouchableOpacity>
-
-      {/* More/Less filters toggle - shown below Apply only when expanded */}
-      {expanded && toggleButton}
 
       {/* Date Picker Modal */}
       <Modal
@@ -285,20 +281,6 @@ const styles = StyleSheet.create({
   timeField: {
     flex: 1,
   },
-  resetButton: {
-    marginTop: 12,
-    backgroundColor: '#fef2f2',
-    borderWidth: 1,
-    borderColor: '#fee2e2',
-    paddingVertical: 10,
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-  resetButtonText: {
-    color: '#ef4444',
-    fontWeight: '600',
-    fontSize: 13,
-  },
   dateField: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -324,8 +306,10 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginTop: 6,
   },
-  expandToggle: {
-    alignSelf: 'flex-start',
+  toggleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     marginTop: 10,
     marginBottom: 2,
   },
@@ -333,6 +317,12 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#3b82f6',
     fontWeight: '700',
+  },
+  resetLinkText: {
+    fontSize: 12,
+    color: '#94a3b8',
+    fontWeight: '600',
+    textDecorationLine: 'underline',
   },
   applyButton: {
     marginTop: 14,

@@ -1,16 +1,19 @@
 // app/delegue/calendar.js
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import { getRendezVousDelegue, annulerRendezVousDelegue, realiserRendezVousDelegue, marquerAbsentMedecin } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import CustomCalendar from '../../components/CustomCalendar';
 import AppointmentCard from '../../components/AppointmentCard';
+import RefreshButton from '../../components/RefreshButton';
+import useConfirmModal from '../../hooks/useConfirmModal';
 
 export default function AppointmentsCalendarScreen() {
   const { delegueId } = useAuth();
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(() => new Date().toISOString().split('T')[0]); // Format: YYYY-MM-DD
+  const { confirm, notify, modal } = useConfirmModal();
 
   // Reusable fetch for manual refreshes (after annuler/réalisé/absent) — safe to call setState
   // directly here since it always runs from an event handler, never from inside an effect body.
@@ -51,19 +54,42 @@ export default function AppointmentsCalendarScreen() {
       await action();
       fetchAppointments();
     } catch (error) {
-      Alert.alert('Erreur', error.message);
+      notify({ title: 'Erreur', message: error.message, variant: 'error' });
     }
   };
 
-  const handleAnnuler = (id) => {
-    Alert.alert('Annuler le rendez-vous', 'Confirmez-vous l’annulation de ce rendez-vous ?', [
-      { text: 'Non', style: 'cancel' },
-      { text: 'Oui, annuler', style: 'destructive', onPress: () => runAction(() => annulerRendezVousDelegue(id)) },
-    ]);
+  const handleAnnuler = async (id) => {
+    const ok = await confirm({
+      title: 'Annuler le rendez-vous',
+      message: 'Confirmez-vous l’annulation de ce rendez-vous ?',
+      variant: 'danger',
+      confirmText: 'Oui, annuler',
+      cancelText: 'Non',
+    });
+    if (ok) runAction(() => annulerRendezVousDelegue(id));
   };
 
-  const handleRealise = (id) => runAction(() => realiserRendezVousDelegue(id));
-  const handleAbsent = (id) => runAction(() => marquerAbsentMedecin(id));
+  const handleRealise = async (id) => {
+    const ok = await confirm({
+      title: 'Marquer réalisé',
+      message: 'Confirmez-vous que cette visite a bien eu lieu ?',
+      variant: 'success',
+      confirmText: 'Oui, réalisé',
+      cancelText: 'Non',
+    });
+    if (ok) runAction(() => realiserRendezVousDelegue(id));
+  };
+
+  const handleAbsent = async (id) => {
+    const ok = await confirm({
+      title: 'Marquer absent',
+      message: 'Confirmez-vous que le médecin ne s\'est pas présenté ?',
+      variant: 'warning',
+      confirmText: 'Oui',
+      cancelText: 'Non',
+    });
+    if (ok) runAction(() => marquerAbsentMedecin(id));
+  };
 
   // Compute appointments for the selected date on the fly (no useEffect required)
   const selectedDayAppointments = selectedDate
@@ -101,13 +127,16 @@ export default function AppointmentsCalendarScreen() {
         <Text style={styles.detailsTitle}>
           {selectedDate ? `Rendez-vous du ${formatFriendlyDate(selectedDate)}` : 'Sélectionnez un jour'}
         </Text>
-        {selectedDate && selectedDayAppointments.length > 0 && (
-          <View style={styles.countBadge}>
-            <Text style={styles.countBadgeText}>
-              {selectedDayAppointments.length} RDV
-            </Text>
-          </View>
-        )}
+        <View style={styles.detailsHeaderActions}>
+          {selectedDate && selectedDayAppointments.length > 0 && (
+            <View style={styles.countBadge}>
+              <Text style={styles.countBadgeText}>
+                {selectedDayAppointments.length} RDV
+              </Text>
+            </View>
+          )}
+          <RefreshButton onPress={fetchAppointments} loading={loading} />
+        </View>
       </View>
 
       {/* Selected Day Appointments List */}
@@ -144,6 +173,8 @@ export default function AppointmentsCalendarScreen() {
           />
         ))
       )}
+
+      {modal}
     </ScrollView>
   );
 }
@@ -165,6 +196,11 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '700',
     color: '#334155',
+  },
+  detailsHeaderActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   countBadge: {
     backgroundColor: '#eff6ff',

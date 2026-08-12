@@ -1,10 +1,12 @@
 // app/medecin/creneaux.js — Rendez-vous du médecin : calendrier + actions (réalisé/absent/annuler)
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Alert, Modal, TextInput, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Modal, TextInput, TouchableOpacity } from 'react-native';
 import { getRendezVousMedecin, realiserRendezVousMedecin, marquerAbsentDelegue, annulerRendezVousMedecin } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import CustomCalendar from '../../components/CustomCalendar';
 import AppointmentCard from '../../components/AppointmentCard';
+import RefreshButton from '../../components/RefreshButton';
+import useConfirmModal from '../../hooks/useConfirmModal';
 
 const MONTHS_FR = [
   'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
@@ -25,6 +27,7 @@ export default function RendezVousMedecinScreen() {
   const [selectedDate, setSelectedDate] = useState(() => new Date().toISOString().split('T')[0]);
 
   const [motifModal, setMotifModal] = useState({ visible: false, id: null, motif: '' });
+  const { confirm, notify, modal } = useConfirmModal();
 
   // Réutilisable pour les rafraîchissements manuels (après annuler/réalisé/absent) — safe à appeler
   // setState directement ici puisque ça s'exécute toujours depuis un event handler, jamais depuis un effet.
@@ -66,23 +69,38 @@ export default function RendezVousMedecinScreen() {
       await action();
       fetchAppointments();
     } catch (error) {
-      Alert.alert('Erreur', error.message);
+      notify({ title: 'Erreur', message: error.message, variant: 'error' });
     }
   };
 
-  const handleRealise = (id) => runAction(() => realiserRendezVousMedecin(id));
-  const handleAbsent = (id) =>
-    Alert.alert('Marquer absent', 'Confirmez-vous que le délégué ne s\'est pas présenté ?', [
-      { text: 'Non', style: 'cancel' },
-      { text: 'Oui', style: 'destructive', onPress: () => runAction(() => marquerAbsentDelegue(id)) },
-    ]);
+  const handleRealise = async (id) => {
+    const ok = await confirm({
+      title: 'Marquer réalisé',
+      message: 'Confirmez-vous que ce rendez-vous a bien eu lieu ?',
+      variant: 'success',
+      confirmText: 'Oui, réalisé',
+      cancelText: 'Non',
+    });
+    if (ok) runAction(() => realiserRendezVousMedecin(id));
+  };
+
+  const handleAbsent = async (id) => {
+    const ok = await confirm({
+      title: 'Marquer absent',
+      message: "Confirmez-vous que le délégué ne s'est pas présenté ?",
+      variant: 'warning',
+      confirmText: 'Oui',
+      cancelText: 'Non',
+    });
+    if (ok) runAction(() => marquerAbsentDelegue(id));
+  };
 
   const openMotifModal = (id) => setMotifModal({ visible: true, id, motif: '' });
   const closeMotifModal = () => setMotifModal({ visible: false, id: null, motif: '' });
 
-  const confirmAnnulation = () => {
+  const confirmAnnulation = async () => {
     if (!motifModal.motif.trim()) {
-      Alert.alert('Motif requis', "Merci d'indiquer un motif d'annulation.");
+      notify({ title: 'Motif requis', message: "Merci d'indiquer un motif d'annulation.", variant: 'warning' });
       return;
     }
     const { id, motif } = motifModal;
@@ -102,11 +120,14 @@ export default function RendezVousMedecinScreen() {
         <Text style={styles.detailsTitle}>
           {selectedDate ? `Rendez-vous du ${formatFriendlyDate(selectedDate)}` : 'Sélectionnez un jour'}
         </Text>
-        {selectedDate && selectedDayAppointments.length > 0 && (
-          <View style={styles.countBadge}>
-            <Text style={styles.countBadgeText}>{selectedDayAppointments.length} RDV</Text>
-          </View>
-        )}
+        <View style={styles.detailsHeaderActions}>
+          {selectedDate && selectedDayAppointments.length > 0 && (
+            <View style={styles.countBadge}>
+              <Text style={styles.countBadgeText}>{selectedDayAppointments.length} RDV</Text>
+            </View>
+          )}
+          <RefreshButton onPress={fetchAppointments} loading={loading} />
+        </View>
       </View>
 
       {loading ? (
@@ -165,6 +186,8 @@ export default function RendezVousMedecinScreen() {
           </View>
         </View>
       </Modal>
+
+      {modal}
     </ScrollView>
   );
 }
@@ -189,6 +212,11 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '700',
     color: '#334155',
+  },
+  detailsHeaderActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   countBadge: {
     backgroundColor: '#eff6ff',

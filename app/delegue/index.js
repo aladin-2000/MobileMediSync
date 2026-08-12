@@ -1,10 +1,12 @@
 // app/delegue/index.js
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, FlatList, ActivityIndicator, Modal, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, FlatList, ActivityIndicator, Modal, TouchableOpacity } from 'react-native';
 import { rechercherMedecins, getCreneauxMedecin, reserverRendezVous, getSpecialites } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import DoctorCard from '../../components/DoctorCard';
 import FilterSection from '../../components/FilterSection';
+import RefreshButton from '../../components/RefreshButton';
+import useConfirmModal from '../../hooks/useConfirmModal';
 
 const MONTHS_FR = [
   'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
@@ -43,6 +45,7 @@ export default function DoctorSearchScreen() {
   const [slotsLoading, setSlotsLoading] = useState(false);
   const [booking, setBooking] = useState(false);
   const [specialites, setSpecialites] = useState([]);
+  const { confirm, notify, modal } = useConfirmModal();
 
   const fetchDoctors = useCallback(async (filterValues) => {
     setLoading(true);
@@ -51,7 +54,7 @@ export default function DoctorSearchScreen() {
       setDoctors(results);
     } catch (error) {
       console.error('Error fetching doctors:', error);
-      Alert.alert('Erreur', error.message);
+      notify({ title: 'Erreur', message: error.message, variant: 'error' });
     } finally {
       setLoading(false);
     }
@@ -88,7 +91,11 @@ export default function DoctorSearchScreen() {
   const loadSlots = (doctor) => {
     setSlotsLoading(true);
     getCreneauxMedecin(doctor.id, filters.date, filters.date)
-      .then((creneaux) => setSlots(creneaux.filter((c) => c.statut === 'DISPONIBLE')))
+      .then((creneaux) => setSlots(
+        creneaux
+          .filter((c) => c.statut === 'DISPONIBLE')
+          .sort((a, b) => a.heureDebut.localeCompare(b.heureDebut))
+      ))
       .catch((error) => {
         console.error('Error fetching doctor slots:', error);
         setSlots([]);
@@ -107,13 +114,26 @@ export default function DoctorSearchScreen() {
   };
 
   const handleBookSlot = async (creneau) => {
+    const ok = await confirm({
+      title: 'Réserver ce créneau ?',
+      message: `${selectedDoctor?.nom} — ${formatFriendlyDate(filters.date)} à ${creneau.heureDebut}`,
+      variant: 'question',
+      confirmText: 'Réserver',
+      cancelText: 'Annuler',
+    });
+    if (!ok) return;
+
     setBooking(true);
     try {
       await reserverRendezVous({ creneauId: creneau.id, delegueId, medecinId: selectedDoctor.id });
-      Alert.alert('Rendez-vous réservé', `Créneau du ${filters.date} à ${creneau.heureDebut} confirmé.`);
       handleCloseSlots();
+      notify({
+        title: 'Rendez-vous réservé',
+        message: `Créneau du ${filters.date} à ${creneau.heureDebut} confirmé.`,
+        variant: 'success',
+      });
     } catch (error) {
-      Alert.alert('Réservation impossible', error.message);
+      notify({ title: 'Réservation impossible', message: error.message, variant: 'error' });
       loadSlots(selectedDoctor);
     } finally {
       setBooking(false);
@@ -141,6 +161,7 @@ export default function DoctorSearchScreen() {
             </View>
           )}
         </View>
+        <RefreshButton onPress={() => fetchDoctors(filters)} loading={loading} />
       </View>
 
       {/* Doctors List - the filter section scrolls together with the results
@@ -221,6 +242,8 @@ export default function DoctorSearchScreen() {
           </TouchableOpacity>
         </TouchableOpacity>
       </Modal>
+
+      {modal}
     </View>
   );
 }

@@ -1,10 +1,12 @@
 // app/medecin/index.js
 import React, { useState, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Modal, Alert, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Modal, ScrollView } from 'react-native';
 import { getCreneauxMedecin, ajouterPlage, supprimerJour } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import CustomCalendar from '../../components/CustomCalendar';
 import TimePicker from '../../components/TimePicker';
+import RefreshButton from '../../components/RefreshButton';
+import useConfirmModal from '../../hooks/useConfirmModal';
 
 const getTodayString = () => new Date().toISOString().split('T')[0];
 
@@ -16,6 +18,7 @@ const TEMPLATES = {
 export default function DisponibilitesScreen() {
   const { medecinId } = useAuth();
   const [creneaux, setCreneaux] = useState([]);
+  const [refreshing, setRefreshing] = useState(false);
   const [viewYear, setViewYear] = useState(new Date().getFullYear());
   const [viewMonth, setViewMonth] = useState(new Date().getMonth());
   const [selectedDate, setSelectedDate] = useState(getTodayString());
@@ -25,6 +28,7 @@ export default function DisponibilitesScreen() {
   const [heureDebut, setHeureDebut] = useState(TEMPLATES.matin.heureDebut);
   const [heureFin, setHeureFin] = useState(TEMPLATES.matin.heureFin);
   const [template, setTemplate] = useState(null);
+  const { confirm, notify, modal } = useConfirmModal();
 
   const fetchCreneaux = useCallback(async (year, month) => {
     if (!medecinId) return;
@@ -35,7 +39,7 @@ export default function DisponibilitesScreen() {
       const data = await getCreneauxMedecin(medecinId, dateDebut, dateFin);
       setCreneaux(data.filter((c) => c.statut !== 'ANNULE'));
     } catch (error) {
-      Alert.alert('Erreur', error.message);
+      notify({ title: 'Erreur', message: error.message, variant: 'error' });
     }
   }, [medecinId]);
 
@@ -44,6 +48,12 @@ export default function DisponibilitesScreen() {
     setViewMonth(month);
     fetchCreneaux(year, month);
   }, [fetchCreneaux]);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await fetchCreneaux(viewYear, viewMonth);
+    setRefreshing(false);
+  };
 
   const daySlots = creneaux.filter((c) => c.date === selectedDate);
   const libres = daySlots.filter((c) => c.statut === 'DISPONIBLE');
@@ -76,37 +86,41 @@ export default function DisponibilitesScreen() {
       });
       setModalVisible(false);
       fetchCreneaux(viewYear, viewMonth);
-      Alert.alert('Créneaux créés', `Disponibilités ajoutées pour le ${selectedDate}, de ${heureDebut} à ${heureFin}.`);
+      notify({
+        title: 'Créneaux créés',
+        message: `Disponibilités ajoutées pour le ${selectedDate}, de ${heureDebut} à ${heureFin}.`,
+        variant: 'success',
+      });
     } catch (error) {
-      Alert.alert('Erreur', error.message);
+      notify({ title: 'Erreur', message: error.message, variant: 'error' });
     }
   };
 
-  const confirmDeleteFreeSlots = () => {
+  const confirmDeleteFreeSlots = async () => {
     if (libres.length === 0) return;
-    Alert.alert(
-      'Libérer cette journée',
-      'Voulez-vous retirer tous les créneaux libres de cette journée ? Les rendez-vous déjà réservés resteront intacts.',
-      [
-        { text: 'Annuler', style: 'cancel' },
-        {
-          text: 'Supprimer',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await supprimerJour(medecinId, selectedDate);
-              fetchCreneaux(viewYear, viewMonth);
-            } catch (error) {
-              Alert.alert('Erreur', error.message);
-            }
-          },
-        },
-      ]
-    );
+    const ok = await confirm({
+      title: 'Libérer cette journée',
+      message: 'Voulez-vous retirer tous les créneaux libres de cette journée ? Les rendez-vous déjà réservés resteront intacts.',
+      variant: 'danger',
+      confirmText: 'Supprimer',
+      cancelText: 'Annuler',
+    });
+    if (!ok) return;
+    try {
+      await supprimerJour(medecinId, selectedDate);
+      fetchCreneaux(viewYear, viewMonth);
+    } catch (error) {
+      notify({ title: 'Erreur', message: error.message, variant: 'error' });
+    }
   };
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <View style={styles.headerRow}>
+        <Text style={styles.headerTitle}>Disponibilités</Text>
+        <RefreshButton onPress={handleRefresh} loading={refreshing} />
+      </View>
+
       {/* Stats du mois */}
       <View style={styles.statsRow}>
         <StatCard label="Créneaux ce mois" value={monthTotal} />
@@ -202,6 +216,8 @@ export default function DisponibilitesScreen() {
         onChange={(value) => (editingTimeField === 'heureDebut' ? setHeureDebut(value) : setHeureFin(value))}
         onClose={() => setEditingTimeField(null)}
       />
+
+      {modal}
     </ScrollView>
   );
 }
@@ -223,11 +239,23 @@ const styles = StyleSheet.create({
   content: {
     paddingBottom: 32,
   },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingTop: 16,
+  },
+  headerTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#0f172a',
+  },
   statsRow: {
     flexDirection: 'row',
     gap: 10,
     paddingHorizontal: 16,
-    paddingTop: 16,
+    paddingTop: 12,
   },
   statCard: {
     flex: 1,

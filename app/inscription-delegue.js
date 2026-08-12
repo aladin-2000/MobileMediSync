@@ -1,11 +1,12 @@
 // app/inscription-delegue.js — Auto-inscription délégué
 import React, { useState, useEffect } from 'react';
 import {
-  View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, ActivityIndicator,
+  View, Text, StyleSheet, TextInput, TouchableOpacity, ActivityIndicator,
   KeyboardAvoidingView, ScrollView, Platform,
 } from 'react-native';
 import { router } from 'expo-router';
 import { getLaboratoires, inscrireDelegue } from '../services/api';
+import useConfirmModal from '../hooks/useConfirmModal';
 
 export default function InscriptionDelegueScreen() {
   const [nom, setNom] = useState('');
@@ -19,6 +20,7 @@ export default function InscriptionDelegueScreen() {
   const [laboratoires, setLaboratoires] = useState([]);
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
+  const { confirm, notify, modal } = useConfirmModal();
 
   useEffect(() => {
     getLaboratoires()
@@ -28,17 +30,26 @@ export default function InscriptionDelegueScreen() {
 
   const handleSubmit = async () => {
     if (!nom || !prenom || !email || !password || !laboratoireId) {
-      Alert.alert('Champs manquants', 'Merci de remplir tous les champs obligatoires.');
+      notify({ title: 'Champs manquants', message: 'Merci de remplir tous les champs obligatoires.', variant: 'warning' });
       return;
     }
     if (password.length < 6) {
-      Alert.alert('Mot de passe trop court', 'Le mot de passe doit contenir au moins 6 caractères.');
+      notify({ title: 'Mot de passe trop court', message: 'Le mot de passe doit contenir au moins 6 caractères.', variant: 'warning' });
       return;
     }
     if (password !== confirmPassword) {
-      Alert.alert('Mots de passe différents', 'Les mots de passe ne correspondent pas.');
+      notify({ title: 'Mots de passe différents', message: 'Les mots de passe ne correspondent pas.', variant: 'warning' });
       return;
     }
+
+    const ok = await confirm({
+      title: 'Créer mon compte',
+      message: 'Confirmez-vous la création de votre compte délégué ?',
+      variant: 'question',
+      confirmText: 'Créer mon compte',
+      cancelText: 'Annuler',
+    });
+    if (!ok) return;
 
     setLoading(true);
     try {
@@ -48,7 +59,7 @@ export default function InscriptionDelegueScreen() {
       });
       setDone(true);
     } catch (error) {
-      Alert.alert('Erreur', error.message);
+      notify({ title: 'Erreur', message: error.message, variant: 'error' });
     } finally {
       setLoading(false);
     }
@@ -157,6 +168,8 @@ export default function InscriptionDelegueScreen() {
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {modal}
     </View>
   );
 }

@@ -6,6 +6,7 @@ import { getRendezVousMedecin, getRendezVousDelegue } from '../services/api';
 import { MONTHS_FR, toISODate, lundiDeLaSemaine, dimancheDeLaSemaine } from '../services/dateUtils';
 import { useAuth } from '../context/AuthContext';
 import AppointmentCard from './AppointmentCard';
+import RefreshButton from './RefreshButton';
 
 function weekLabel(current) {
   const lundi = lundiDeLaSemaine(current);
@@ -68,6 +69,7 @@ export default function HistoriqueScreen({ role = 'DELEGUE' }) {
         <TouchableOpacity style={styles.navButton} onPress={() => changeWeek(1)} activeOpacity={0.7}>
           <Text style={styles.navButtonText}>›</Text>
         </TouchableOpacity>
+        <RefreshButton onPress={load} loading={loading} style={styles.refreshButton} />
       </View>
       <TouchableOpacity style={styles.todayButton} onPress={() => setCurrentDate(new Date())} activeOpacity={0.7}>
         <Text style={styles.todayButtonText}>Cette semaine</Text>
@@ -130,6 +132,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#e2e8f0',
   },
   navButtonText: { fontSize: 18, color: '#334155', lineHeight: 20 },
+  refreshButton: { marginLeft: 4 },
   weekLabel: { fontSize: 14, fontWeight: '700', color: '#0f172a' },
   todayButton: { alignSelf: 'center', marginTop: 8 },
   todayButtonText: { fontSize: 12, fontWeight: '700', color: '#3b82f6' },

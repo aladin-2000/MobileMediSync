@@ -3,6 +3,7 @@ import React, { useRef, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Modal, Animated, Dimensions, Platform } from 'react-native';
 import { router } from 'expo-router';
 import { useAuth } from '../context/AuthContext';
+import useConfirmModal from '../hooks/useConfirmModal';
 
 const SIDEBAR_WIDTH = Math.min(300, Dimensions.get('window').width * 0.78);
 const ANIM_DURATION = 220;
@@ -38,6 +39,7 @@ export default function HeaderMenu({ onLogout }) {
   const [visible, setVisible] = useState(false);
   const translateX = useRef(new Animated.Value(-SIDEBAR_WIDTH)).current;
   const backdropOpacity = useRef(new Animated.Value(0)).current;
+  const { confirm, modal } = useConfirmModal();
 
   const openSidebar = () => {
     setVisible(true);
@@ -57,7 +59,16 @@ export default function HeaderMenu({ onLogout }) {
     });
   };
 
-  const handleLogout = () => closeSidebar(onLogout);
+  const handleLogout = async () => {
+    const ok = await confirm({
+      title: 'Déconnexion',
+      message: 'Voulez-vous vraiment vous déconnecter ?',
+      variant: 'warning',
+      confirmText: 'Se déconnecter',
+      cancelText: 'Annuler',
+    });
+    if (ok) closeSidebar(onLogout);
+  };
   const handleNavigate = (path) => closeSidebar(() => router.push(path));
 
   const initiale = user?.email?.[0]?.toUpperCase() ?? '?';
@@ -126,6 +137,8 @@ export default function HeaderMenu({ onLogout }) {
           </Animated.View>
         </View>
       </Modal>
+
+      {modal}
     </>
   );
 }

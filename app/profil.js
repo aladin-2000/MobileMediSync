@@ -1,6 +1,6 @@
 // app/profil.js
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, Image, ScrollView, TextInput, TouchableOpacity, Alert, Modal } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, Image, ScrollView, TextInput, TouchableOpacity, Modal } from 'react-native';
 import { Stack } from 'expo-router';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -8,6 +8,7 @@ import {
   updateMonProfilMedecin, updateMonProfilDelegue,
   getSpecialites,
 } from '../services/api';
+import useConfirmModal from '../hooks/useConfirmModal';
 
 const ROLE_LABELS = {
   DELEGUE: 'Délégué médical',
@@ -27,6 +28,7 @@ export default function ProfilScreen() {
   const [form, setForm] = useState({ nom: '', prenom: '', telephone: '', specialite: '', adresseCabinet: '' });
   const [specialites, setSpecialites] = useState([]);
   const [specialitePickerVisible, setSpecialitePickerVisible] = useState(false);
+  const { confirm, notify, modal } = useConfirmModal();
 
   const canEdit = user?.role === 'DELEGUE' || user?.role === 'MEDECIN';
 
@@ -71,13 +73,22 @@ export default function ProfilScreen() {
 
   const handleSave = async () => {
     if (!form.nom.trim() || !form.prenom.trim()) {
-      Alert.alert('Champs manquants', 'Nom et prénom sont obligatoires.');
+      notify({ title: 'Champs manquants', message: 'Nom et prénom sont obligatoires.', variant: 'warning' });
       return;
     }
     if (user.role === 'MEDECIN' && (!form.specialite || !form.adresseCabinet.trim())) {
-      Alert.alert('Champs manquants', 'Spécialité et adresse du cabinet sont obligatoires.');
+      notify({ title: 'Champs manquants', message: 'Spécialité et adresse du cabinet sont obligatoires.', variant: 'warning' });
       return;
     }
+
+    const ok = await confirm({
+      title: 'Enregistrer les modifications',
+      message: 'Confirmez-vous la mise à jour de votre profil ?',
+      variant: 'question',
+      confirmText: 'Enregistrer',
+      cancelText: 'Annuler',
+    });
+    if (!ok) return;
 
     setSaving(true);
     try {
@@ -96,8 +107,9 @@ export default function ProfilScreen() {
           });
       setProfil(updated);
       setEditing(false);
+      notify({ title: 'Profil mis à jour', message: 'Vos informations ont bien été enregistrées.', variant: 'success' });
     } catch (err) {
-      Alert.alert('Erreur', err.message);
+      notify({ title: 'Erreur', message: err.message, variant: 'error' });
     } finally {
       setSaving(false);
     }
@@ -197,6 +209,8 @@ export default function ProfilScreen() {
             </TouchableOpacity>
           </TouchableOpacity>
         </Modal>
+
+        {modal}
       </ScrollView>
     );
   }
@@ -261,6 +275,8 @@ export default function ProfilScreen() {
       )}
 
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
+      {modal}
     </ScrollView>
   );
 }

@@ -1,17 +1,28 @@
 // app/changer-mot-de-passe.js
 import {                useState } from "react";
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, ActivityIndicator } from "react-native";
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, ActivityIndicator } from "react-native";
 import { router } from "expo-router";
 import { useAuth } from "../context/AuthContext";
 import * as authService from "../services/authService";
+import useConfirmModal from "../hooks/useConfirmModal";
 
 export default function ChangerMotDePasseScreen() {
   const { user, markPasswordChanged } = useAuth();
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const { confirm, notify, modal } = useConfirmModal();
 
   const handleSubmit = async () => {
+    const ok = await confirm({
+      title: "Changer le mot de passe",
+      message: "Confirmez-vous le changement de votre mot de passe ?",
+      variant: "question",
+      confirmText: "Confirmer",
+      cancelText: "Annuler",
+    });
+    if (!ok) return;
+
     setLoading(true);
     try {
       await authService.changerMotDePasse(currentPassword, newPassword);
@@ -20,7 +31,7 @@ export default function ChangerMotDePasseScreen() {
       else if (user.role === "DELEGUE") router.replace("/delegue");
       else if (user.role === "ADMIN") router.replace("/admin");
     } catch (error) {
-      Alert.alert("Erreur", error.message);
+      notify({ title: "Erreur", message: error.message, variant: "error" });
     } finally {
       setLoading(false);
     }
@@ -46,6 +57,8 @@ export default function ChangerMotDePasseScreen() {
           {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Valider</Text>}
         </TouchableOpacity>
       </View>
+
+      {modal}
     </View>
   );
 }

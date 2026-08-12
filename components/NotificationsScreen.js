@@ -3,6 +3,7 @@ import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import { getMesNotifications, marquerNotificationLue, marquerToutesNotificationsLues, iconeNotification } from '../services/api';
+import RefreshButton from './RefreshButton';
 
 function formatDate(dateStr) {
   const date = new Date(dateStr);
@@ -77,14 +78,19 @@ export default function NotificationsScreen() {
 
   return (
     <View style={styles.container}>
-      {unreadCount > 0 && (
-        <View style={styles.header}>
-          <Text style={styles.headerText}>{unreadCount} non lue{unreadCount > 1 ? 's' : ''}</Text>
-          <TouchableOpacity onPress={handleMarkAllRead} activeOpacity={0.7}>
-            <Text style={styles.markAllText}>Tout marquer comme lu</Text>
-          </TouchableOpacity>
-        </View>
-      )}
+      <View style={styles.header}>
+        {unreadCount > 0 ? (
+          <>
+            <Text style={styles.headerText}>{unreadCount} non lue{unreadCount > 1 ? 's' : ''}</Text>
+            <TouchableOpacity onPress={handleMarkAllRead} activeOpacity={0.7}>
+              <Text style={styles.markAllText}>Tout marquer comme lu</Text>
+            </TouchableOpacity>
+          </>
+        ) : (
+          <Text style={styles.headerText}>Notifications</Text>
+        )}
+        <RefreshButton onPress={onRefresh} loading={refreshing} style={styles.refreshButton} />
+      </View>
 
       <FlatList
         data={notifications}
@@ -121,11 +127,12 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f8fafc' },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   header: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10,
     paddingHorizontal: 18, paddingVertical: 12, backgroundColor: '#ffffff', borderBottomWidth: 1, borderBottomColor: '#f1f5f9',
   },
-  headerText: { fontSize: 13, fontWeight: '700', color: '#334155' },
+  headerText: { fontSize: 13, fontWeight: '700', color: '#334155', flex: 1 },
   markAllText: { fontSize: 12, fontWeight: '700', color: '#3b82f6' },
+  refreshButton: { marginLeft: 4 },
   listContainer: { paddingVertical: 8, paddingBottom: 24 },
   card: {
     flexDirection: 'row', alignItems: 'flex-start', gap: 10,

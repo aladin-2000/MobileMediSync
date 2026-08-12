@@ -9,6 +9,7 @@ import {
 } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { MONTHS_FR, DAYS_FR, toISODate, lundiDeLaSemaine, dimancheDeLaSemaine } from '../services/dateUtils';
+import RefreshButton from './RefreshButton';
 
 export default function HomeScreen({ role = 'DELEGUE' }) {
   const { user, medecinId, delegueId } = useAuth();
@@ -68,7 +69,10 @@ export default function HomeScreen({ role = 'DELEGUE' }) {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
       <View style={styles.hero}>
-        <Text style={styles.heroEyebrow}>{todayLabel}</Text>
+        <View style={styles.heroTopRow}>
+          <Text style={styles.heroEyebrow}>{todayLabel}</Text>
+          <RefreshButton onPress={load} loading={loading} />
+        </View>
         <Text style={styles.heroTitle}>Bonjour, {nom}</Text>
         <Text style={styles.heroSubtitle}>Voici un aperçu de votre activité aujourd’hui.</Text>
       </View>
@@ -162,7 +166,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#eff6ff', borderRadius: 16, padding: 18, marginBottom: 16,
     borderWidth: 1, borderColor: '#dbeafe',
   },
-  heroEyebrow: { fontSize: 11, fontWeight: '700', color: '#3b82f6', textTransform: 'capitalize', marginBottom: 4 },
+  heroTopRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 },
+  heroEyebrow: { fontSize: 11, fontWeight: '700', color: '#3b82f6', textTransform: 'capitalize' },
   heroTitle: { fontSize: 19, fontWeight: '800', color: '#0f172a' },
   heroSubtitle: { fontSize: 12, color: '#64748b', marginTop: 4 },
   statsRow: { flexDirection: 'row', gap: 10, marginBottom: 16 },
