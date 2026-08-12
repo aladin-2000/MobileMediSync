@@ -1,7 +1,7 @@
 // app/delegue/index.js
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, FlatList, ActivityIndicator, Modal, TouchableOpacity, Alert } from 'react-native';
-import { rechercherMedecins, getCreneauxMedecin, reserverRendezVous } from '../../services/api';
+import { rechercherMedecins, getCreneauxMedecin, reserverRendezVous, getSpecialites } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import DoctorCard from '../../components/DoctorCard';
 import FilterSection from '../../components/FilterSection';
@@ -42,6 +42,7 @@ export default function DoctorSearchScreen() {
   const [slots, setSlots] = useState([]);
   const [slotsLoading, setSlotsLoading] = useState(false);
   const [booking, setBooking] = useState(false);
+  const [specialites, setSpecialites] = useState([]);
 
   const fetchDoctors = useCallback(async (filterValues) => {
     setLoading(true);
@@ -62,6 +63,10 @@ export default function DoctorSearchScreen() {
   useEffect(() => {
     Promise.resolve().then(() => fetchDoctors(EMPTY_FILTERS));
   }, [fetchDoctors]);
+
+  useEffect(() => {
+    getSpecialites().then(setSpecialites).catch(() => {});
+  }, []);
 
   const handleFilterChange = (key, value) => {
     setFilters(prev => ({
@@ -152,6 +157,7 @@ export default function DoctorSearchScreen() {
             onFilterChange={handleFilterChange}
             onReset={handleResetFilters}
             onApply={handleApply}
+            specialites={specialites}
           />
         }
         ListEmptyComponent={

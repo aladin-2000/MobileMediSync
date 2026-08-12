@@ -93,23 +93,18 @@ export async function updateMonProfilDelegue(payload) {
 
 /**
  * GET /medecins/recherche — recherche publique de médecins disponibles.
- * Le backend n'accepte qu'une seule spécialité à la fois ; si plusieurs sont
- * sélectionnées dans le filtre, on récupère tout puis on filtre côté client.
+ * `specialite` est un tableau de valeurs d'enum (ex: ['CARDIOLOGIE', 'DERMATOLOGIE']) —
+ * le backend accepte une ou plusieurs spécialités via le paramètre `specialites`.
  */
 export async function rechercherMedecins({ nom, specialite, date, heureDebut, heureFin } = {}) {
   const params = new URLSearchParams();
   if (nom) params.append('nom', nom);
-  if (specialite && specialite.length === 1) params.append('specialite', specialite[0]);
+  if (specialite && specialite.length > 0) params.append('specialites', specialite.join(','));
   params.append('date', date);
   if (heureDebut) params.append('heureDebut', `${heureDebut}:00`);
   if (heureFin) params.append('heureFin', `${heureFin}:00`);
 
-  const medecins = await apiRequest(`/medecins/recherche?${params.toString()}`, { auth: false });
-
-  if (specialite && specialite.length > 1) {
-    return medecins.filter((m) => specialite.includes(m.specialite));
-  }
-  return medecins;
+  return apiRequest(`/medecins/recherche?${params.toString()}`, { auth: false });
 }
 
 /** GET /medecins/creneaux/periode — tous les créneaux d'un médecin sur une période (ne garder que DISPONIBLE côté écran). */
@@ -184,7 +179,7 @@ async function enrichirRendezVous(rendezVousList, role) {
       return {
         id: rdv.id,
         date: creneau.date,
-        heure: creneau.heureDebut,
+        heure: creneau.heureDebut.slice(0, 5),
         statut: STATUT_RDV_LABELS[rdv.statut] || rdv.statut,
         statutBrut: rdv.statut,
         realiseParDelegue: rdv.realiseParDelegue,

@@ -1,6 +1,6 @@
 // app/delegue/calendar.js
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, FlatList, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Alert } from 'react-native';
 import { getRendezVousDelegue, annulerRendezVousDelegue, realiserRendezVousDelegue, marquerAbsentMedecin } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import CustomCalendar from '../../components/CustomCalendar';
@@ -88,7 +88,7 @@ export default function AppointmentsCalendarScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
       {/* Calendar Component */}
       <CustomCalendar
         appointments={appointments}
@@ -124,32 +124,27 @@ export default function AppointmentsCalendarScreen() {
             Touchez un jour sur le calendrier pour afficher la liste des visites correspondantes.
           </Text>
         </View>
+      ) : selectedDayAppointments.length === 0 ? (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyEmoji}>🍃</Text>
+          <Text style={styles.emptyTitle}>Aucune visite prévue</Text>
+          <Text style={styles.emptySubtitle}>
+            {"Vous n'avez pas de rendez-vous avec un médecin à cette date."}
+          </Text>
+        </View>
       ) : (
-        <FlatList
-          data={selectedDayAppointments}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <AppointmentCard
-              appointment={item}
-              role="DELEGUE"
-              onAnnuler={() => handleAnnuler(item.id)}
-              onRealise={() => handleRealise(item.id)}
-              onAbsent={() => handleAbsent(item.id)}
-            />
-          )}
-          contentContainerStyle={styles.listContainer}
-          ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyEmoji}>🍃</Text>
-              <Text style={styles.emptyTitle}>Aucune visite prévue</Text>
-              <Text style={styles.emptySubtitle}>
-                {"Vous n'avez pas de rendez-vous avec un médecin à cette date."}
-              </Text>
-            </View>
-          }
-        />
+        selectedDayAppointments.map((item) => (
+          <AppointmentCard
+            key={item.id}
+            appointment={item}
+            role="DELEGUE"
+            onAnnuler={() => handleAnnuler(item.id)}
+            onRealise={() => handleRealise(item.id)}
+            onAbsent={() => handleAbsent(item.id)}
+          />
+        ))
       )}
-    </View>
+    </ScrollView>
   );
 }
 
@@ -184,11 +179,10 @@ const styles = StyleSheet.create({
     color: '#2563eb',
     fontWeight: '700',
   },
-  listContainer: {
+  scrollContent: {
     paddingBottom: 24,
   },
   centered: {
-    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 16,
@@ -200,7 +194,6 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   emptyContainer: {
-    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     padding: 32,

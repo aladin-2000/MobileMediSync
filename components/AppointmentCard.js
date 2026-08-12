@@ -56,19 +56,25 @@ export default function AppointmentCard({ appointment, role = 'DELEGUE', onAnnul
       {isModifiable && (
         <View style={styles.actionsRow}>
           <TouchableOpacity
-            style={[styles.actionButton, dejaConfirmeParMoi && styles.actionButtonDisabled]}
+            style={[styles.actionButton, styles.actionButtonRealise, dejaConfirmeParMoi && styles.actionButtonDisabled]}
             onPress={onRealise}
             disabled={dejaConfirmeParMoi}
             activeOpacity={0.7}
           >
-            <Text style={styles.actionButtonText}>Réalisé</Text>
+            <Text style={[styles.actionButtonText, styles.actionButtonRealiseText]}>
+              {dejaConfirmeParMoi ? '✓ Réalisé' : 'Réalisé'}
+            </Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.actionButton} onPress={onAbsent} activeOpacity={0.7}>
-            <Text style={styles.actionButtonText}>Absent</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.actionButton, styles.actionButtonDanger]} onPress={onAnnuler} activeOpacity={0.7}>
-            <Text style={[styles.actionButtonText, styles.actionButtonDangerText]}>Annuler</Text>
-          </TouchableOpacity>
+          {!dejaConfirmeParMoi && (
+            <>
+              <TouchableOpacity style={[styles.actionButton, styles.actionButtonAbsent]} onPress={onAbsent} activeOpacity={0.7}>
+                <Text style={[styles.actionButtonText, styles.actionButtonAbsentText]}>Absent</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.actionButton, styles.actionButtonDanger]} onPress={onAnnuler} activeOpacity={0.7}>
+                <Text style={[styles.actionButtonText, styles.actionButtonDangerText]}>Annuler</Text>
+              </TouchableOpacity>
+            </>
+          )}
         </View>
       )}
     </View>
@@ -160,12 +166,24 @@ const styles = StyleSheet.create({
     backgroundColor: '#f1f5f9',
   },
   actionButtonDisabled: {
-    opacity: 0.5,
+    opacity: 0.6,
   },
   actionButtonText: {
     fontSize: 12,
     fontWeight: '700',
     color: '#475569',
+  },
+  actionButtonRealise: {
+    backgroundColor: '#dcfce7',
+  },
+  actionButtonRealiseText: {
+    color: '#15803d',
+  },
+  actionButtonAbsent: {
+    backgroundColor: '#fef3c7',
+  },
+  actionButtonAbsentText: {
+    color: '#b45309',
   },
   actionButtonDanger: {
     backgroundColor: '#fef2f2',

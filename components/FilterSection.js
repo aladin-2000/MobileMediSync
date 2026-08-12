@@ -1,10 +1,8 @@
 // components/FilterSection.js
 import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, ScrollView, TouchableOpacity, Modal } from 'react-native';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, Modal } from 'react-native';
 import CustomCalendar from './CustomCalendar';
 import TimePicker from './TimePicker';
-
-const SPECIALTIES = ['Généraliste', 'Cardiologie', 'Pédiatrie', 'Dermatologue', 'Gynécologue'];
 
 const MONTHS_FR = [
   'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
@@ -23,7 +21,7 @@ const formatFriendlyDate = (dateStr) => {
 
 const getTodayString = () => new Date().toISOString().split('T')[0];
 
-export default function FilterSection({ filters, onFilterChange, onReset, onApply }) {
+export default function FilterSection({ filters, onFilterChange, onReset, onApply, specialites = [] }) {
   const [expanded, setExpanded] = useState(false);
   const [calendarVisible, setCalendarVisible] = useState(false);
   const [editingTimeField, setEditingTimeField] = useState(null); // 'heureDebut' | 'heureFin' | null
@@ -100,25 +98,25 @@ export default function FilterSection({ filters, onFilterChange, onReset, onAppl
             onChangeText={(text) => onFilterChange('nom', text)}
           />
 
-          {/* Specialty Filter - multi-select */}
+          {/* Specialty Filter - multi-select, une ou plusieurs spécialités */}
           <Text style={styles.sectionTitle}>Spécialité</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scrollContainer}>
-            {SPECIALTIES.map((spec) => {
-              const isSelected = (filters.specialite || []).includes(spec);
+          <View style={styles.chipsGrid}>
+            {specialites.map((opt) => {
+              const isSelected = (filters.specialite || []).includes(opt.valeur);
               return (
                 <TouchableOpacity
-                  key={spec}
-                  onPress={() => toggleSpecialite(spec)}
+                  key={opt.valeur}
+                  onPress={() => toggleSpecialite(opt.valeur)}
                   style={[styles.chip, isSelected && styles.chipSelected]}
                   activeOpacity={0.7}
                 >
                   <Text style={[styles.chipText, isSelected && styles.chipTextSelected]}>
-                    {spec}
+                    {opt.libelle}
                   </Text>
                 </TouchableOpacity>
               );
             })}
-          </ScrollView>
+          </View>
 
           {/* Time Range Filter - tap to pick with the wheel picker */}
           <Text style={styles.sectionTitle}>Plage horaire</Text>
@@ -252,9 +250,11 @@ const styles = StyleSheet.create({
     color: '#0f172a',
     marginBottom: 8,
   },
-  scrollContainer: {
-    paddingVertical: 4,
+  chipsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 8,
+    paddingVertical: 4,
   },
   chip: {
     backgroundColor: '#f1f5f9',

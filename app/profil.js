@@ -1,6 +1,6 @@
 // app/profil.js
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, Image, ScrollView, TextInput, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, Image, ScrollView, TextInput, TouchableOpacity, Alert, Modal } from 'react-native';
 import { Stack } from 'expo-router';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -26,6 +26,7 @@ export default function ProfilScreen() {
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({ nom: '', prenom: '', telephone: '', specialite: '', adresseCabinet: '' });
   const [specialites, setSpecialites] = useState([]);
+  const [specialitePickerVisible, setSpecialitePickerVisible] = useState(false);
 
   const canEdit = user?.role === 'DELEGUE' || user?.role === 'MEDECIN';
 
@@ -54,6 +55,8 @@ export default function ProfilScreen() {
       getSpecialites().then(setSpecialites).catch(() => {});
     }
   }, [user]);
+
+  const specialiteLibelle = (valeur) => specialites.find((s) => s.valeur === valeur)?.libelle ?? valeur;
 
   const openEdit = () => {
     setForm({
@@ -122,20 +125,16 @@ export default function ProfilScreen() {
           <>
             <View style={styles.fieldGroup}>
               <Text style={styles.label}>Spécialité</Text>
-              <View style={styles.chipsWrap}>
-                {specialites.map((opt) => (
-                  <TouchableOpacity
-                    key={opt.valeur}
-                    style={[styles.chip, form.specialite === opt.valeur && styles.chipActive]}
-                    onPress={() => setForm((f) => ({ ...f, specialite: opt.valeur }))}
-                    activeOpacity={0.7}
-                  >
-                    <Text style={[styles.chipText, form.specialite === opt.valeur && styles.chipTextActive]}>
-                      {opt.libelle}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
+              <TouchableOpacity
+                style={styles.selectField}
+                onPress={() => setSpecialitePickerVisible(true)}
+                activeOpacity={0.7}
+              >
+                <Text style={form.specialite ? styles.selectFieldValue : styles.selectFieldPlaceholder}>
+                  {form.specialite ? specialiteLibelle(form.specialite) : 'Choisir une spécialité'}
+                </Text>
+                <Text style={styles.selectFieldChevron}>▾</Text>
+              </TouchableOpacity>
             </View>
             <View style={styles.fieldGroup}>
               <Text style={styles.label}>Adresse du cabinet</Text>
@@ -163,6 +162,41 @@ export default function ProfilScreen() {
             {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.saveButtonText}>Enregistrer</Text>}
           </TouchableOpacity>
         </View>
+
+        <Modal
+          visible={specialitePickerVisible}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setSpecialitePickerVisible(false)}
+        >
+          <TouchableOpacity
+            style={styles.modalBackdrop}
+            activeOpacity={1}
+            onPress={() => setSpecialitePickerVisible(false)}
+          >
+            <TouchableOpacity activeOpacity={1} onPress={() => {}} style={styles.pickerCard}>
+              <Text style={styles.pickerTitle}>Choisir une spécialité</Text>
+              <ScrollView style={styles.pickerList}>
+                {specialites.map((opt) => (
+                  <TouchableOpacity
+                    key={opt.valeur}
+                    style={styles.pickerRow}
+                    onPress={() => {
+                      setForm((f) => ({ ...f, specialite: opt.valeur }));
+                      setSpecialitePickerVisible(false);
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={[styles.pickerRowText, form.specialite === opt.valeur && styles.pickerRowTextActive]}>
+                      {opt.libelle}
+                    </Text>
+                    {form.specialite === opt.valeur && <Text style={styles.pickerRowCheck}>✓</Text>}
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </TouchableOpacity>
+          </TouchableOpacity>
+        </Modal>
       </ScrollView>
     );
   }
@@ -209,7 +243,7 @@ export default function ProfilScreen() {
             <InfoRow label="Score de fiabilité" value={`${profil.scoreFiabilite}%`} />
           ) : null}
           {user?.role === 'MEDECIN' && profil?.specialite ? (
-            <InfoRow label="Spécialité" value={profil.specialite} />
+            <InfoRow label="Spécialité" value={specialiteLibelle(profil.specialite)} />
           ) : null}
           {user?.role === 'MEDECIN' && profil?.adresseCabinet ? (
             <InfoRow label="Cabinet" value={profil.adresseCabinet} last={!profil?.telephone} />
@@ -372,14 +406,32 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff', borderWidth: 1.5, borderColor: '#e2e8f0', borderRadius: 14,
     paddingHorizontal: 14, paddingVertical: 13, fontSize: 15, color: '#0f172a',
   },
-  chipsWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  chip: {
-    paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20,
-    backgroundColor: '#ffffff', borderWidth: 1.5, borderColor: '#e2e8f0',
+  selectField: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    backgroundColor: '#ffffff', borderWidth: 1.5, borderColor: '#e2e8f0', borderRadius: 14,
+    paddingHorizontal: 14, paddingVertical: 13,
   },
-  chipActive: { backgroundColor: '#eff6ff', borderColor: '#3b82f6' },
-  chipText: { fontSize: 12, fontWeight: '600', color: '#475569' },
-  chipTextActive: { color: '#2563eb' },
+  selectFieldValue: { fontSize: 15, color: '#0f172a', fontWeight: '600' },
+  selectFieldPlaceholder: { fontSize: 15, color: '#94a3b8' },
+  selectFieldChevron: { fontSize: 14, color: '#94a3b8' },
+  modalBackdrop: {
+    flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.5)', justifyContent: 'center', alignItems: 'center',
+  },
+  pickerCard: {
+    backgroundColor: '#ffffff', borderRadius: 16, paddingVertical: 16, marginHorizontal: 24,
+    width: '85%', maxHeight: '70%',
+  },
+  pickerTitle: {
+    fontSize: 15, fontWeight: '800', color: '#0f172a', textAlign: 'center', marginBottom: 8, paddingHorizontal: 16,
+  },
+  pickerList: { paddingHorizontal: 8 },
+  pickerRow: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingVertical: 13, paddingHorizontal: 12, borderBottomWidth: 1, borderBottomColor: '#f1f5f9',
+  },
+  pickerRowText: { fontSize: 14, color: '#334155', fontWeight: '600' },
+  pickerRowTextActive: { color: '#2563eb', fontWeight: '800' },
+  pickerRowCheck: { fontSize: 14, color: '#2563eb', fontWeight: '800' },
   editActions: { flexDirection: 'row', gap: 10, marginTop: 8 },
   cancelButton: {
     flex: 1, backgroundColor: '#f1f5f9', borderRadius: 14, paddingVertical: 14, alignItems: 'center',

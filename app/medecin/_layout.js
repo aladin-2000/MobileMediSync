@@ -72,26 +72,10 @@ export default function MedecinLayout() {
           ),
         }}
       />
-      <Tabs.Screen
-        name="historique"
-        options={{
-          title: 'Historique',
-          tabBarLabel: 'Historique',
-          tabBarIcon: ({ color }) => (
-            <Text style={{ color, fontSize: 18 }}>🕓</Text>
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="notifications"
-        options={{
-          title: 'Notifications',
-          tabBarLabel: 'Notifications',
-          tabBarIcon: ({ color }) => (
-            <Text style={{ color, fontSize: 18 }}>🔔</Text>
-          ),
-        }}
-      />
+      {/* Accessibles depuis le menu latéral (HeaderMenu), pas depuis la barre d'onglets
+          (max 3-4 onglets pour ne pas surcharger le bas de l'écran). */}
+      <Tabs.Screen name="historique" options={{ href: null }} />
+      <Tabs.Screen name="notifications" options={{ href: null }} />
     </Tabs>
   );
 }

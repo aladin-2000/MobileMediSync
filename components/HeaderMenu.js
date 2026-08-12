@@ -14,6 +14,25 @@ const ROLE_LABELS = {
   LABO: 'Laboratoire',
 };
 
+// Toutes les pages du rôle sont listées ici — la barre d'onglets, elle, n'en garde que 3
+// pour ne pas surcharger le bas de l'écran (voir app/medecin/_layout.js et app/delegue/_layout.js).
+const MENU_ITEMS_BY_ROLE = {
+  MEDECIN: [
+    { icon: '🏠', label: 'Accueil', path: '/medecin/home' },
+    { icon: '📅', label: 'Disponibilités', path: '/medecin' },
+    { icon: '🗓️', label: 'Rendez-vous', path: '/medecin/creneaux' },
+    { icon: '🕓', label: 'Historique', path: '/medecin/historique' },
+    { icon: '🔔', label: 'Notifications', path: '/medecin/notifications' },
+  ],
+  DELEGUE: [
+    { icon: '🏠', label: 'Accueil', path: '/delegue/home' },
+    { icon: '🔍', label: 'Chercher un médecin', path: '/delegue' },
+    { icon: '📅', label: 'Mon calendrier', path: '/delegue/calendar' },
+    { icon: '🕓', label: 'Historique', path: '/delegue/historique' },
+    { icon: '🔔', label: 'Notifications', path: '/delegue/notifications' },
+  ],
+};
+
 export default function HeaderMenu({ onLogout }) {
   const { user } = useAuth();
   const [visible, setVisible] = useState(false);
@@ -39,9 +58,10 @@ export default function HeaderMenu({ onLogout }) {
   };
 
   const handleLogout = () => closeSidebar(onLogout);
-  const handleProfile = () => closeSidebar(() => router.push('/profil'));
+  const handleNavigate = (path) => closeSidebar(() => router.push(path));
 
   const initiale = user?.email?.[0]?.toUpperCase() ?? '?';
+  const menuItems = MENU_ITEMS_BY_ROLE[user?.role] ?? [];
 
   return (
     <>
@@ -71,7 +91,24 @@ export default function HeaderMenu({ onLogout }) {
 
             {/* Menu items */}
             <View style={styles.menuSection}>
-              <TouchableOpacity style={styles.menuItem} onPress={handleProfile} activeOpacity={0.7}>
+              {menuItems.map((item) => (
+                <TouchableOpacity
+                  key={item.path}
+                  style={styles.menuItem}
+                  onPress={() => handleNavigate(item.path)}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.menuItemIconWrap}>
+                    <Text style={styles.menuItemIcon}>{item.icon}</Text>
+                  </View>
+                  <Text style={styles.menuItemText}>{item.label}</Text>
+                  <Text style={styles.menuItemChevron}>›</Text>
+                </TouchableOpacity>
+              ))}
+
+              <View style={styles.menuDivider} />
+
+              <TouchableOpacity style={styles.menuItem} onPress={() => handleNavigate('/profil')} activeOpacity={0.7}>
                 <View style={styles.menuItemIconWrap}>
                   <Text style={styles.menuItemIcon}>👤</Text>
                 </View>
@@ -198,6 +235,12 @@ const styles = StyleSheet.create({
     fontSize: 20,
     color: '#cbd5e1',
     fontWeight: '300',
+  },
+  menuDivider: {
+    height: 1,
+    backgroundColor: '#f1f5f9',
+    marginVertical: 8,
+    marginHorizontal: 8,
   },
   sidebarSpacer: {
     flex: 1,

@@ -7,7 +7,7 @@ import { getToken, clearSession } from './storage';
 // Backend Spring Boot (port par défaut, aucun server.port custom dans application.properties).
 // IP locale du PC (Wi-Fi) pour tester sur un appareil physique via Expo Go.
 // Remets 'http://localhost:8080' si tu testes uniquement sur émulateur/simulateur.
-export const BASE_URL = 'http://192.168.100.11:8080';
+export const BASE_URL = 'http://192.168.100.5:8080';
 
 /**
  * @param {string} path - ex: '/auth/login'

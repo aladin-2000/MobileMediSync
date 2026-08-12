@@ -1,6 +1,6 @@
 // app/medecin/creneaux.js — Rendez-vous du médecin : calendrier + actions (réalisé/absent/annuler)
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, FlatList, ActivityIndicator, Alert, Modal, TextInput, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Alert, Modal, TextInput, TouchableOpacity } from 'react-native';
 import { getRendezVousMedecin, realiserRendezVousMedecin, marquerAbsentDelegue, annulerRendezVousMedecin } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import CustomCalendar from '../../components/CustomCalendar';
@@ -22,7 +22,7 @@ export default function RendezVousMedecinScreen() {
   const { medecinId } = useAuth();
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedDate, setSelectedDate] = useState('');
+  const [selectedDate, setSelectedDate] = useState(() => new Date().toISOString().split('T')[0]);
 
   const [motifModal, setMotifModal] = useState({ visible: false, id: null, motif: '' });
 
@@ -95,7 +95,7 @@ export default function RendezVousMedecinScreen() {
     : [];
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
       <CustomCalendar appointments={appointments} selectedDate={selectedDate} onDaySelect={handleDaySelect} />
 
       <View style={styles.detailsHeader}>
@@ -122,28 +122,23 @@ export default function RendezVousMedecinScreen() {
             Touchez un jour sur le calendrier pour afficher la liste des rendez-vous correspondants.
           </Text>
         </View>
+      ) : selectedDayAppointments.length === 0 ? (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyEmoji}>🍃</Text>
+          <Text style={styles.emptyTitle}>Aucun rendez-vous</Text>
+          <Text style={styles.emptySubtitle}>Vous n’avez aucun rendez-vous prévu à cette date.</Text>
+        </View>
       ) : (
-        <FlatList
-          data={selectedDayAppointments}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <AppointmentCard
-              appointment={item}
-              role="MEDECIN"
-              onAnnuler={() => openMotifModal(item.id)}
-              onRealise={() => handleRealise(item.id)}
-              onAbsent={() => handleAbsent(item.id)}
-            />
-          )}
-          contentContainerStyle={styles.listContainer}
-          ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyEmoji}>🍃</Text>
-              <Text style={styles.emptyTitle}>Aucun rendez-vous</Text>
-              <Text style={styles.emptySubtitle}>Vous n’avez aucun rendez-vous prévu à cette date.</Text>
-            </View>
-          }
-        />
+        selectedDayAppointments.map((item) => (
+          <AppointmentCard
+            key={item.id}
+            appointment={item}
+            role="MEDECIN"
+            onAnnuler={() => openMotifModal(item.id)}
+            onRealise={() => handleRealise(item.id)}
+            onAbsent={() => handleAbsent(item.id)}
+          />
+        ))
       )}
 
       <Modal visible={motifModal.visible} transparent animationType="fade" onRequestClose={closeMotifModal}>
@@ -170,7 +165,7 @@ export default function RendezVousMedecinScreen() {
           </View>
         </View>
       </Modal>
-    </View>
+    </ScrollView>
   );
 }
 
@@ -178,6 +173,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f8fafc',
+  },
+  scrollContent: {
+    paddingBottom: 24,
   },
   detailsHeader: {
     flexDirection: 'row',
@@ -205,11 +203,7 @@ const styles = StyleSheet.create({
     color: '#2563eb',
     fontWeight: '700',
   },
-  listContainer: {
-    paddingBottom: 24,
-  },
   centered: {
-    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 16,
@@ -221,7 +215,6 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   emptyContainer: {
-    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     padding: 32,
