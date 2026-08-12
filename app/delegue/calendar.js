@@ -10,7 +10,7 @@ export default function AppointmentsCalendarScreen() {
   const { delegueId } = useAuth();
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedDate, setSelectedDate] = useState(''); // Format: YYYY-MM-DD
+  const [selectedDate, setSelectedDate] = useState(() => new Date().toISOString().split('T')[0]); // Format: YYYY-MM-DD
 
   // Reusable fetch for manual refreshes (after annuler/réalisé/absent) — safe to call setState
   // directly here since it always runs from an event handler, never from inside an effect body.

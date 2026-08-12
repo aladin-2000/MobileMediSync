@@ -1,6 +1,6 @@
 // components/FilterSection.js
 import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, Modal } from 'react-native';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, Modal, ScrollView } from 'react-native';
 import CustomCalendar from './CustomCalendar';
 import TimePicker from './TimePicker';
 
@@ -24,6 +24,7 @@ const getTodayString = () => new Date().toISOString().split('T')[0];
 export default function FilterSection({ filters, onFilterChange, onReset, onApply, specialites = [] }) {
   const [expanded, setExpanded] = useState(false);
   const [calendarVisible, setCalendarVisible] = useState(false);
+  const [specialiteDropdownVisible, setSpecialiteDropdownVisible] = useState(false);
   const [editingTimeField, setEditingTimeField] = useState(null); // 'heureDebut' | 'heureFin' | null
 
   const isPastDate = filters.date < getTodayString();
@@ -37,6 +38,13 @@ export default function FilterSection({ filters, onFilterChange, onReset, onAppl
     onFilterChange('specialite', next);
   };
 
+  const specialitesLabel = (() => {
+    const selected = filters.specialite || [];
+    if (selected.length === 0) return 'Toutes les spécialités';
+    if (selected.length === 1) return specialites.find((s) => s.valeur === selected[0])?.libelle ?? selected[0];
+    return `${selected.length} spécialités sélectionnées`;
+  })();
+
   const handleDaySelect = (dateStr) => {
     onFilterChange('date', dateStr);
     setCalendarVisible(false);
@@ -44,11 +52,6 @@ export default function FilterSection({ filters, onFilterChange, onReset, onAppl
 
   const handleTimeChange = (value) => {
     onFilterChange(editingTimeField, value);
-  };
-
-  const handleClearTime = () => {
-    onFilterChange(editingTimeField, '');
-    setEditingTimeField(null);
   };
 
   // Same button shown either above or below "Appliquer" depending on expanded state
@@ -98,27 +101,18 @@ export default function FilterSection({ filters, onFilterChange, onReset, onAppl
             onChangeText={(text) => onFilterChange('nom', text)}
           />
 
-          {/* Specialty Filter - multi-select, une ou plusieurs spécialités */}
+          {/* Specialty Filter - liste déroulante à cases à cocher, une ou plusieurs spécialités */}
           <Text style={styles.sectionTitle}>Spécialité</Text>
-          <View style={styles.chipsGrid}>
-            {specialites.map((opt) => {
-              const isSelected = (filters.specialite || []).includes(opt.valeur);
-              return (
-                <TouchableOpacity
-                  key={opt.valeur}
-                  onPress={() => toggleSpecialite(opt.valeur)}
-                  style={[styles.chip, isSelected && styles.chipSelected]}
-                  activeOpacity={0.7}
-                >
-                  <Text style={[styles.chipText, isSelected && styles.chipTextSelected]}>
-                    {opt.libelle}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
+          <TouchableOpacity
+            style={styles.dateField}
+            onPress={() => setSpecialiteDropdownVisible(true)}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.dateFieldEmoji}>🩺</Text>
+            <Text style={styles.dateFieldText}>{specialitesLabel}</Text>
+          </TouchableOpacity>
 
-          {/* Time Range Filter - tap to pick with the wheel picker */}
+          {/* Time Range Filter - tap to pick with the OS's native time picker */}
           <Text style={styles.sectionTitle}>Plage horaire</Text>
           <View style={styles.timeFieldRow}>
             <TouchableOpacity
@@ -128,6 +122,11 @@ export default function FilterSection({ filters, onFilterChange, onReset, onAppl
             >
               <Text style={styles.dateFieldEmoji}>🕐</Text>
               <Text style={styles.dateFieldText}>{filters.heureDebut || 'Heure début'}</Text>
+              {filters.heureDebut ? (
+                <TouchableOpacity onPress={() => onFilterChange('heureDebut', '')} hitSlop={8}>
+                  <Text style={styles.clearIcon}>✕</Text>
+                </TouchableOpacity>
+              ) : null}
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.dateField, styles.timeField]}
@@ -136,6 +135,11 @@ export default function FilterSection({ filters, onFilterChange, onReset, onAppl
             >
               <Text style={styles.dateFieldEmoji}>🕐</Text>
               <Text style={styles.dateFieldText}>{filters.heureFin || 'Heure fin'}</Text>
+              {filters.heureFin ? (
+                <TouchableOpacity onPress={() => onFilterChange('heureFin', '')} hitSlop={8}>
+                  <Text style={styles.clearIcon}>✕</Text>
+                </TouchableOpacity>
+              ) : null}
             </TouchableOpacity>
           </View>
 
@@ -187,35 +191,53 @@ export default function FilterSection({ filters, onFilterChange, onReset, onAppl
         </TouchableOpacity>
       </Modal>
 
-      {/* Time Picker Modal (shared by "Heure début" and "Heure fin") */}
-      <Modal
+      {/* Time Picker (shared by "Heure début" and "Heure fin") */}
+      <TimePicker
         visible={editingTimeField !== null}
+        value={editingTimeField ? filters[editingTimeField] : ''}
+        onChange={handleTimeChange}
+        onClose={() => setEditingTimeField(null)}
+      />
+
+      {/* Specialty Dropdown Modal - liste à cases à cocher, comme le web */}
+      <Modal
+        visible={specialiteDropdownVisible}
         transparent
         animationType="fade"
-        onRequestClose={() => setEditingTimeField(null)}
+        onRequestClose={() => setSpecialiteDropdownVisible(false)}
       >
         <TouchableOpacity
           style={styles.modalBackdrop}
           activeOpacity={1}
-          onPress={() => setEditingTimeField(null)}
+          onPress={() => setSpecialiteDropdownVisible(false)}
         >
-          <TouchableOpacity activeOpacity={1} onPress={() => {}}>
-            <TimePicker
-              value={editingTimeField ? filters[editingTimeField] : ''}
-              onChange={handleTimeChange}
-            />
-            <View style={styles.timeModalButtonRow}>
-              <TouchableOpacity style={styles.clearButton} onPress={handleClearTime} activeOpacity={0.8}>
-                <Text style={styles.clearButtonText}>Effacer</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.modalCloseButton, styles.timeModalConfirmButton]}
-                onPress={() => setEditingTimeField(null)}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.modalCloseButtonText}>OK</Text>
-              </TouchableOpacity>
-            </View>
+          <TouchableOpacity activeOpacity={1} onPress={() => {}} style={styles.specialiteCard}>
+            <Text style={styles.specialiteCardTitle}>Spécialités</Text>
+            <ScrollView style={styles.specialiteList}>
+              {specialites.map((opt) => {
+                const isSelected = (filters.specialite || []).includes(opt.valeur);
+                return (
+                  <TouchableOpacity
+                    key={opt.valeur}
+                    style={styles.specialiteOption}
+                    onPress={() => toggleSpecialite(opt.valeur)}
+                    activeOpacity={0.7}
+                  >
+                    <View style={[styles.checkbox, isSelected && styles.checkboxChecked]}>
+                      {isSelected && <Text style={styles.checkboxMark}>✓</Text>}
+                    </View>
+                    <Text style={styles.specialiteOptionText}>{opt.libelle}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+            <TouchableOpacity
+              style={styles.specialiteCloseButton}
+              onPress={() => setSpecialiteDropdownVisible(false)}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.modalCloseButtonText}>Fermer</Text>
+            </TouchableOpacity>
           </TouchableOpacity>
         </TouchableOpacity>
       </Modal>
@@ -250,31 +272,11 @@ const styles = StyleSheet.create({
     color: '#0f172a',
     marginBottom: 8,
   },
-  chipsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    paddingVertical: 4,
-  },
-  chip: {
-    backgroundColor: '#f1f5f9',
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-  },
-  chipSelected: {
-    backgroundColor: '#3b82f6',
-    borderColor: '#3b82f6',
-  },
-  chipText: {
+  clearIcon: {
     fontSize: 13,
-    color: '#475569',
-    fontWeight: '600',
-  },
-  chipTextSelected: {
-    color: '#ffffff',
+    color: '#94a3b8',
+    fontWeight: '800',
+    marginLeft: 'auto',
   },
   timeFieldRow: {
     flexDirection: 'row',
@@ -367,31 +369,61 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontSize: 14,
   },
-  timeModalButtonRow: {
+  specialiteCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    padding: 16,
+    marginHorizontal: 24,
+    width: '85%',
+    maxHeight: '70%',
+  },
+  specialiteCardTitle: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#0f172a',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  specialiteList: {
+    maxHeight: 320,
+  },
+  specialiteOption: {
     flexDirection: 'row',
-    gap: 8,
-    marginHorizontal: 16,
-    marginTop: -8,
-    marginBottom: 16,
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
   },
-  timeModalConfirmButton: {
-    flex: 1,
-    marginHorizontal: 0,
-    marginTop: 0,
-    marginBottom: 0,
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderRadius: 5,
+    borderWidth: 1.5,
+    borderColor: '#cbd5e1',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  clearButton: {
-    flex: 1,
-    backgroundColor: '#fef2f2',
-    borderWidth: 1,
-    borderColor: '#fee2e2',
+  checkboxChecked: {
+    backgroundColor: '#3b82f6',
+    borderColor: '#3b82f6',
+  },
+  checkboxMark: {
+    fontSize: 12,
+    color: '#ffffff',
+    fontWeight: '800',
+  },
+  specialiteOptionText: {
+    fontSize: 14,
+    color: '#334155',
+    fontWeight: '600',
+  },
+  specialiteCloseButton: {
+    marginTop: 12,
+    backgroundColor: '#3b82f6',
     paddingVertical: 12,
     borderRadius: 10,
     alignItems: 'center',
-  },
-  clearButtonText: {
-    color: '#ef4444',
-    fontWeight: '700',
-    fontSize: 14,
   },
 });

@@ -195,20 +195,13 @@ export default function DisponibilitesScreen() {
         </TouchableOpacity>
       </Modal>
 
-      {/* Time Picker Modal (shared by "Début" et "Fin") */}
-      <Modal visible={editingTimeField !== null} transparent animationType="fade" onRequestClose={() => setEditingTimeField(null)}>
-        <TouchableOpacity style={styles.modalBackdrop} activeOpacity={1} onPress={() => setEditingTimeField(null)}>
-          <TouchableOpacity activeOpacity={1} onPress={() => {}}>
-            <TimePicker
-              value={editingTimeField === 'heureDebut' ? heureDebut : heureFin}
-              onChange={(value) => (editingTimeField === 'heureDebut' ? setHeureDebut(value) : setHeureFin(value))}
-            />
-            <TouchableOpacity style={styles.modalCloseButton} onPress={() => setEditingTimeField(null)} activeOpacity={0.8}>
-              <Text style={styles.modalConfirmText}>OK</Text>
-            </TouchableOpacity>
-          </TouchableOpacity>
-        </TouchableOpacity>
-      </Modal>
+      {/* Time Picker (shared by "Début" et "Fin") */}
+      <TimePicker
+        visible={editingTimeField !== null}
+        value={editingTimeField === 'heureDebut' ? heureDebut : heureFin}
+        onChange={(value) => (editingTimeField === 'heureDebut' ? setHeureDebut(value) : setHeureFin(value))}
+        onClose={() => setEditingTimeField(null)}
+      />
     </ScrollView>
   );
 }
@@ -442,14 +435,5 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontWeight: '700',
     fontSize: 14,
-  },
-  modalCloseButton: {
-    marginHorizontal: 16,
-    marginTop: -8,
-    marginBottom: 16,
-    backgroundColor: '#3b82f6',
-    paddingVertical: 12,
-    borderRadius: 10,
-    alignItems: 'center',
   },
 });
