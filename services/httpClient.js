@@ -4,10 +4,9 @@
 import { router } from 'expo-router';
 import { getToken, clearSession } from './storage';
 
-// Backend Spring Boot (port par défaut, aucun server.port custom dans application.properties).
-// IP locale du PC (Wi-Fi) pour tester sur un appareil physique via Expo Go.
-// Remets 'http://localhost:8080' si tu testes uniquement sur émulateur/simulateur.
-export const BASE_URL = 'http://192.168.100.5:8080';
+const DEV_URL = 'http://192.168.100.5:8080';
+const PROD_URL = 'https://medisync-1tu5.onrender.com';
+export const BASE_URL = __DEV__ ? DEV_URL : PROD_URL;
 
 /**
  * @param {string} path - ex: '/auth/login'
