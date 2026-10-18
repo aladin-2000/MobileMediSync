@@ -6,7 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import {
   getDelegueByUserId, getMedecinByUserId,
   updateMonProfilMedecin, updateMonProfilDelegue,
-  getSpecialites,
+  getSpecialites, getRegions,
 } from '../services/api';
 import useConfirmModal from '../hooks/useConfirmModal';
 
@@ -25,9 +25,11 @@ export default function ProfilScreen() {
 
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState({ nom: '', prenom: '', telephone: '', specialite: '', adresseCabinet: '' });
+  const [form, setForm] = useState({ nom: '', prenom: '', telephone: '', specialite: '', adresseCabinet: '', regionId: '' });
   const [specialites, setSpecialites] = useState([]);
+  const [regions, setRegions] = useState([]);
   const [specialitePickerVisible, setSpecialitePickerVisible] = useState(false);
+  const [regionPickerVisible, setRegionPickerVisible] = useState(false);
   const { confirm, notify, modal } = useConfirmModal();
 
   const canEdit = user?.role === 'DELEGUE' || user?.role === 'MEDECIN';
@@ -55,10 +57,12 @@ export default function ProfilScreen() {
   useEffect(() => {
     if (user?.role === 'MEDECIN') {
       getSpecialites().then(setSpecialites).catch(() => {});
+      getRegions().then(setRegions).catch(() => {});
     }
   }, [user]);
 
   const specialiteLibelle = (valeur) => specialites.find((s) => s.valeur === valeur)?.libelle ?? valeur;
+  const regionLibelle = (valeur) => regions.find((r) => r.valeur === valeur)?.libelle ?? valeur;
 
   const openEdit = () => {
     setForm({
@@ -67,6 +71,7 @@ export default function ProfilScreen() {
       telephone: profil?.telephone ?? '',
       specialite: profil?.specialite ?? '',
       adresseCabinet: profil?.adresseCabinet ?? '',
+      regionId: profil?.regionId ?? '',
     });
     setEditing(true);
   };
@@ -98,6 +103,7 @@ export default function ProfilScreen() {
             prenom: form.prenom.trim(),
             specialite: form.specialite,
             adresseCabinet: form.adresseCabinet.trim(),
+            regionId: form.regionId || undefined,
             telephone: form.telephone.trim() || undefined,
           })
         : await updateMonProfilDelegue({
@@ -155,6 +161,19 @@ export default function ProfilScreen() {
                 onChangeText={(v) => setForm((f) => ({ ...f, adresseCabinet: v }))}
               />
             </View>
+            <View style={styles.fieldGroup}>
+              <Text style={styles.label}>Région</Text>
+              <TouchableOpacity
+                style={styles.selectField}
+                onPress={() => setRegionPickerVisible(true)}
+                activeOpacity={0.7}
+              >
+                <Text style={form.regionId ? styles.selectFieldValue : styles.selectFieldPlaceholder}>
+                  {form.regionId ? regionLibelle(form.regionId) : 'Choisir une région'}
+                </Text>
+                <Text style={styles.selectFieldChevron}>▾</Text>
+              </TouchableOpacity>
+            </View>
           </>
         )}
 
@@ -210,6 +229,41 @@ export default function ProfilScreen() {
           </TouchableOpacity>
         </Modal>
 
+        <Modal
+          visible={regionPickerVisible}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setRegionPickerVisible(false)}
+        >
+          <TouchableOpacity
+            style={styles.modalBackdrop}
+            activeOpacity={1}
+            onPress={() => setRegionPickerVisible(false)}
+          >
+            <TouchableOpacity activeOpacity={1} onPress={() => {}} style={styles.pickerCard}>
+              <Text style={styles.pickerTitle}>Choisir une région</Text>
+              <ScrollView style={styles.pickerList}>
+                {regions.map((opt) => (
+                  <TouchableOpacity
+                    key={opt.valeur}
+                    style={styles.pickerRow}
+                    onPress={() => {
+                      setForm((f) => ({ ...f, regionId: opt.valeur }));
+                      setRegionPickerVisible(false);
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={[styles.pickerRowText, form.regionId === opt.valeur && styles.pickerRowTextActive]}>
+                      {opt.libelle}
+                    </Text>
+                    {form.regionId === opt.valeur && <Text style={styles.pickerRowCheck}>✓</Text>}
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </TouchableOpacity>
+          </TouchableOpacity>
+        </Modal>
+
         {modal}
       </ScrollView>
     );
@@ -246,7 +300,7 @@ export default function ProfilScreen() {
       ) : null}
 
       {loading ? (
-        <ActivityIndicator size="large" color="#3b82f6" style={styles.loading} />
+        <ActivityIndicator size="large" color="#16a34a" style={styles.loading} />
       ) : (
         <View style={styles.card}>
           <InfoRow label="Email" value={user?.email} />
@@ -260,7 +314,10 @@ export default function ProfilScreen() {
             <InfoRow label="Spécialité" value={specialiteLibelle(profil.specialite)} />
           ) : null}
           {user?.role === 'MEDECIN' && profil?.adresseCabinet ? (
-            <InfoRow label="Cabinet" value={profil.adresseCabinet} last={!profil?.telephone} />
+            <InfoRow label="Cabinet" value={profil.adresseCabinet} />
+          ) : null}
+          {user?.role === 'MEDECIN' && profil?.regionNom ? (
+            <InfoRow label="Région" value={profil.regionNom} last={!profil?.telephone} />
           ) : null}
           {user?.role === 'MEDECIN' && profil?.telephone ? (
             <InfoRow label="Téléphone" value={profil.telephone} last />
@@ -316,7 +373,7 @@ const styles = StyleSheet.create({
     width: 96,
     height: 96,
     borderRadius: 48,
-    backgroundColor: '#3b82f6',
+    backgroundColor: '#16a34a',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -332,18 +389,18 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   roleBadge: {
-    backgroundColor: '#eff6ff',
+    backgroundColor: '#f0fdf4',
     borderRadius: 20,
     paddingHorizontal: 12,
     paddingVertical: 5,
     marginTop: 8,
     borderWidth: 1,
-    borderColor: '#dbeafe',
+    borderColor: '#dcfce7',
   },
   roleBadgeText: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#1d4ed8',
+    color: '#166534',
   },
   pendingBanner: {
     backgroundColor: '#fffbeb',
@@ -406,7 +463,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
     backgroundColor: '#ffffff',
     borderWidth: 1.5,
-    borderColor: '#3b82f6',
+    borderColor: '#16a34a',
     borderRadius: 14,
     paddingVertical: 12,
     paddingHorizontal: 24,
@@ -414,7 +471,7 @@ const styles = StyleSheet.create({
   editButtonText: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#3b82f6',
+    color: '#16a34a',
   },
   fieldGroup: { marginBottom: 16 },
   label: { fontSize: 12, fontWeight: '700', color: '#475569', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.4 },
@@ -446,15 +503,15 @@ const styles = StyleSheet.create({
     paddingVertical: 13, paddingHorizontal: 12, borderBottomWidth: 1, borderBottomColor: '#f1f5f9',
   },
   pickerRowText: { fontSize: 14, color: '#334155', fontWeight: '600' },
-  pickerRowTextActive: { color: '#2563eb', fontWeight: '800' },
-  pickerRowCheck: { fontSize: 14, color: '#2563eb', fontWeight: '800' },
+  pickerRowTextActive: { color: '#15803d', fontWeight: '800' },
+  pickerRowCheck: { fontSize: 14, color: '#15803d', fontWeight: '800' },
   editActions: { flexDirection: 'row', gap: 10, marginTop: 8 },
   cancelButton: {
     flex: 1, backgroundColor: '#f1f5f9', borderRadius: 14, paddingVertical: 14, alignItems: 'center',
   },
   cancelButtonText: { fontSize: 14, fontWeight: '700', color: '#475569' },
   saveButton: {
-    flex: 1, backgroundColor: '#3b82f6', borderRadius: 14, paddingVertical: 14, alignItems: 'center',
+    flex: 1, backgroundColor: '#16a34a', borderRadius: 14, paddingVertical: 14, alignItems: 'center',
   },
   saveButtonText: { fontSize: 14, fontWeight: '700', color: '#ffffff' },
 });

@@ -55,7 +55,7 @@ const styles = StyleSheet.create({
   },
   doneButton: {
     marginTop: 8,
-    backgroundColor: '#3b82f6',
+    backgroundColor: '#16a34a',
     paddingVertical: 12,
     borderRadius: 10,
     alignItems: 'center',

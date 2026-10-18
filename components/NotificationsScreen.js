@@ -71,7 +71,7 @@ export default function NotificationsScreen() {
   if (loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="small" color="#3b82f6" />
+        <ActivityIndicator size="small" color="#16a34a" />
       </View>
     );
   }
@@ -95,7 +95,7 @@ export default function NotificationsScreen() {
       <FlatList
         data={notifications}
         keyExtractor={(item) => item.id}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#3b82f6']} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#16a34a']} />}
         contentContainerStyle={styles.listContainer}
         renderItem={({ item }) => (
           <TouchableOpacity
@@ -131,7 +131,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18, paddingVertical: 12, backgroundColor: '#ffffff', borderBottomWidth: 1, borderBottomColor: '#f1f5f9',
   },
   headerText: { fontSize: 13, fontWeight: '700', color: '#334155', flex: 1 },
-  markAllText: { fontSize: 12, fontWeight: '700', color: '#3b82f6' },
+  markAllText: { fontSize: 12, fontWeight: '700', color: '#16a34a' },
   refreshButton: { marginLeft: 4 },
   listContainer: { paddingVertical: 8, paddingBottom: 24 },
   card: {
@@ -139,12 +139,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff', marginHorizontal: 16, marginVertical: 4, padding: 14, borderRadius: 12,
     borderWidth: 1, borderColor: '#f1f5f9',
   },
-  cardUnread: { backgroundColor: '#f5f9ff', borderColor: '#dbeafe' },
+  cardUnread: { backgroundColor: '#f5f9ff', borderColor: '#dcfce7' },
   cardIcon: { fontSize: 18, marginTop: 1 },
   cardBody: { flex: 1 },
   cardText: { fontSize: 13.5, color: '#0f172a', lineHeight: 19 },
   cardDate: { fontSize: 11, color: '#94a3b8', marginTop: 4 },
-  dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#3b82f6', marginTop: 6 },
+  dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#16a34a', marginTop: 6 },
   emptyContainer: { alignItems: 'center', justifyContent: 'center', padding: 48 },
   emptyEmoji: { fontSize: 32, marginBottom: 10 },
   emptyTitle: { fontSize: 14, fontWeight: '700', color: '#475569', marginBottom: 4 },

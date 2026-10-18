@@ -1,7 +1,7 @@
 // app/delegue/index.js
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, FlatList, ActivityIndicator, Modal, TouchableOpacity } from 'react-native';
-import { rechercherMedecins, getCreneauxMedecin, reserverRendezVous, getSpecialites } from '../../services/api';
+import { rechercherMedecins, getCreneauxMedecin, reserverRendezVous, getSpecialites, getRegions } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import DoctorCard from '../../components/DoctorCard';
 import FilterSection from '../../components/FilterSection';
@@ -30,6 +30,7 @@ const getTodayString = () => new Date().toISOString().split('T')[0];
 const EMPTY_FILTERS = {
   nom: '',
   specialite: [],
+  regionId: '',
   date: getTodayString(),
   heureDebut: '',
   heureFin: ''
@@ -45,6 +46,7 @@ export default function DoctorSearchScreen() {
   const [slotsLoading, setSlotsLoading] = useState(false);
   const [booking, setBooking] = useState(false);
   const [specialites, setSpecialites] = useState([]);
+  const [regions, setRegions] = useState([]);
   const { confirm, notify, modal } = useConfirmModal();
 
   const fetchDoctors = useCallback(async (filterValues) => {
@@ -69,6 +71,10 @@ export default function DoctorSearchScreen() {
 
   useEffect(() => {
     getSpecialites().then(setSpecialites).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    getRegions().then(setRegions).catch(() => {});
   }, []);
 
   const handleFilterChange = (key, value) => {
@@ -179,6 +185,7 @@ export default function DoctorSearchScreen() {
             onReset={handleResetFilters}
             onApply={handleApply}
             specialites={specialites}
+            regions={regions}
           />
         }
         ListEmptyComponent={
@@ -190,7 +197,7 @@ export default function DoctorSearchScreen() {
             </View>
           ) : loading ? (
             <View style={styles.centered}>
-              <ActivityIndicator size="large" color="#3b82f6" />
+              <ActivityIndicator size="large" color="#16a34a" />
               <Text style={styles.loadingText}>Chargement des médecins...</Text>
             </View>
           ) : (
@@ -216,7 +223,7 @@ export default function DoctorSearchScreen() {
             <Text style={styles.slotsDate}>{formatFriendlyDate(filters.date)}</Text>
 
             {slotsLoading ? (
-              <ActivityIndicator size="small" color="#3b82f6" style={styles.slotsLoading} />
+              <ActivityIndicator size="small" color="#16a34a" style={styles.slotsLoading} />
             ) : slots.length > 0 ? (
               <View style={styles.slotsGrid}>
                 {slots.map((slot) => (
@@ -234,7 +241,7 @@ export default function DoctorSearchScreen() {
             ) : (
               <Text style={styles.slotsEmptyText}>Aucun créneau disponible ce jour-là.</Text>
             )}
-            {booking && <ActivityIndicator size="small" color="#3b82f6" style={styles.slotsLoading} />}
+            {booking && <ActivityIndicator size="small" color="#16a34a" style={styles.slotsLoading} />}
 
             <TouchableOpacity style={styles.modalCloseButton} onPress={handleCloseSlots} activeOpacity={0.8}>
               <Text style={styles.modalCloseButtonText}>Fermer</Text>
@@ -274,16 +281,16 @@ const styles = StyleSheet.create({
     color: '#64748b',
   },
   activeFiltersIndicator: {
-    backgroundColor: '#eff6ff',
+    backgroundColor: '#f0fdf4',
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: '#dbeafe',
+    borderColor: '#dcfce7',
   },
   activeFiltersIndicatorText: {
     fontSize: 11,
-    color: '#1d4ed8',
+    color: '#166534',
     fontWeight: '700',
   },
   list: {
@@ -372,17 +379,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   slotChip: {
-    backgroundColor: '#eff6ff',
+    backgroundColor: '#f0fdf4',
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#dbeafe',
+    borderColor: '#dcfce7',
   },
   slotChipText: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#1d4ed8',
+    color: '#166534',
   },
   slotsEmptyText: {
     fontSize: 14,
@@ -392,7 +399,7 @@ const styles = StyleSheet.create({
   },
   modalCloseButton: {
     marginTop: 18,
-    backgroundColor: '#3b82f6',
+    backgroundColor: '#16a34a',
     paddingVertical: 12,
     borderRadius: 10,
     alignItems: 'center',

@@ -159,7 +159,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: 260,
-    backgroundColor: "#3b82f6",
+    backgroundColor: "#16a34a",
     borderBottomLeftRadius: 48,
     borderBottomRightRadius: 48,
   },
@@ -256,12 +256,12 @@ const styles = StyleSheet.create({
     paddingLeft: 8,
   },
   button: {
-    backgroundColor: "#3b82f6",
+    backgroundColor: "#16a34a",
     borderRadius: 14,
     paddingVertical: 15,
     alignItems: "center",
     marginTop: 8,
-    shadowColor: "#3b82f6",
+    shadowColor: "#16a34a",
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.35,
     shadowRadius: 12,
@@ -292,7 +292,7 @@ const styles = StyleSheet.create({
   signupLink: {
     fontSize: 13,
     fontWeight: "700",
-    color: "#3b82f6",
+    color: "#16a34a",
   },
   signupDot: {
     color: "#cbd5e1",

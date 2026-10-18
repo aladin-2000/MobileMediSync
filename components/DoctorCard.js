@@ -3,7 +3,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 
 export default function DoctorCard({ doctor, onPress }) {
-  const { nom, prenom, specialite, adresseCabinet } = doctor;
+  const { nom, prenom, specialite, adresseCabinet, regionNom } = doctor;
 
   return (
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.8}>
@@ -15,7 +15,9 @@ export default function DoctorCard({ doctor, onPress }) {
       </View>
 
       <Text style={styles.label}>Cabinet :</Text>
-      <Text style={styles.address}>{adresseCabinet}</Text>
+      <Text style={styles.address}>
+        {adresseCabinet}{adresseCabinet && regionNom ? ' · ' : ''}{regionNom}
+      </Text>
     </TouchableOpacity>
   );
 }
@@ -50,7 +52,7 @@ const styles = StyleSheet.create({
   specialty: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#3b82f6',
+    color: '#16a34a',
     marginTop: 2,
   },
   label: {

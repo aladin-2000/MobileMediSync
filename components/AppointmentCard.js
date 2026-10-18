@@ -135,7 +135,7 @@ const styles = StyleSheet.create({
   docSpecialty: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#3b82f6',
+    color: '#16a34a',
     marginTop: 2,
     marginBottom: 6,
   },

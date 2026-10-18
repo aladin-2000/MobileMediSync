@@ -4,8 +4,8 @@ import React, { useEffect, useRef } from 'react';
 import { Modal, View, Text, TouchableOpacity, StyleSheet, Animated, Easing } from 'react-native';
 
 const VARIANTS = {
-  info: { icon: 'ℹ️', color: '#3b82f6', bg: '#eff6ff', border: '#dbeafe' },
-  question: { icon: '❓', color: '#3b82f6', bg: '#eff6ff', border: '#dbeafe' },
+  info: { icon: 'ℹ️', color: '#16a34a', bg: '#f0fdf4', border: '#dcfce7' },
+  question: { icon: '❓', color: '#16a34a', bg: '#f0fdf4', border: '#dcfce7' },
   success: { icon: '✅', color: '#16a34a', bg: '#f0fdf4', border: '#dcfce7' },
   warning: { icon: '⚠️', color: '#f59e0b', bg: '#fffbeb', border: '#fde68a' },
   danger: { icon: '🗑️', color: '#ef4444', bg: '#fef2f2', border: '#fee2e2' },

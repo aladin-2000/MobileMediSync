@@ -292,7 +292,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   primaryButton: {
-    backgroundColor: '#3b82f6',
+    backgroundColor: '#16a34a',
     paddingVertical: 12,
     borderRadius: 10,
     alignItems: 'center',
@@ -336,12 +336,12 @@ const styles = StyleSheet.create({
   },
   summaryCard: {
     flex: 1,
-    backgroundColor: '#eff6ff',
+    backgroundColor: '#f0fdf4',
     borderRadius: 12,
     paddingVertical: 12,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#dbeafe',
+    borderColor: '#dcfce7',
   },
   summaryCardReserve: {
     backgroundColor: '#f0fdf4',
@@ -350,7 +350,7 @@ const styles = StyleSheet.create({
   summaryNum: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#3b82f6',
+    color: '#16a34a',
   },
   summaryNumReserve: {
     color: '#15803d',
@@ -399,8 +399,8 @@ const styles = StyleSheet.create({
     borderColor: '#e2e8f0',
   },
   templateChipSelected: {
-    backgroundColor: '#3b82f6',
-    borderColor: '#3b82f6',
+    backgroundColor: '#16a34a',
+    borderColor: '#16a34a',
   },
   templateChipText: {
     fontSize: 12,
@@ -457,7 +457,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 10,
     alignItems: 'center',
-    backgroundColor: '#3b82f6',
+    backgroundColor: '#16a34a',
   },
   modalConfirmText: {
     color: '#ffffff',

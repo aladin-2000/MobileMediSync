@@ -142,7 +142,7 @@ export default function AppointmentsCalendarScreen() {
       {/* Selected Day Appointments List */}
       {loading ? (
         <View style={styles.centered}>
-          <ActivityIndicator size="small" color="#3b82f6" />
+          <ActivityIndicator size="small" color="#16a34a" />
           <Text style={styles.loadingText}>Mise à jour des rendez-vous...</Text>
         </View>
       ) : !selectedDate ? (
@@ -203,16 +203,16 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   countBadge: {
-    backgroundColor: '#eff6ff',
+    backgroundColor: '#f0fdf4',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#dbeafe',
+    borderColor: '#dcfce7',
   },
   countBadgeText: {
     fontSize: 11,
-    color: '#2563eb',
+    color: '#15803d',
     fontWeight: '700',
   },
   scrollContent: {

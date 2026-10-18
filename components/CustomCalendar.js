@@ -212,7 +212,7 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   cellSelected: {
-    backgroundColor: '#3b82f6',
+    backgroundColor: '#16a34a',
   },
   cellToday: {
     borderWidth: 1.5,

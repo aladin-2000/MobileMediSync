@@ -5,7 +5,7 @@ import {
   KeyboardAvoidingView, ScrollView, Platform,
 } from 'react-native';
 import { router } from 'expo-router';
-import { getSpecialites, inscrireMedecin } from '../services/api';
+import { getSpecialites, getRegions, inscrireMedecin } from '../services/api';
 import useConfirmModal from '../hooks/useConfirmModal';
 
 export default function InscriptionMedecinScreen() {
@@ -16,9 +16,11 @@ export default function InscriptionMedecinScreen() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [specialite, setSpecialite] = useState('');
   const [adresseCabinet, setAdresseCabinet] = useState('');
+  const [regionId, setRegionId] = useState('');
   const [telephone, setTelephone] = useState('');
 
   const [specialites, setSpecialites] = useState([]);
+  const [regions, setRegions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
   const { confirm, notify, modal } = useConfirmModal();
@@ -27,8 +29,12 @@ export default function InscriptionMedecinScreen() {
     getSpecialites().then(setSpecialites).catch(() => {});
   }, []);
 
+  useEffect(() => {
+    getRegions().then(setRegions).catch(() => {});
+  }, []);
+
   const handleSubmit = async () => {
-    if (!nom || !prenom || !email || !password || !specialite || !adresseCabinet) {
+    if (!nom || !prenom || !email || !password || !specialite || !adresseCabinet || !regionId) {
       notify({ title: 'Champs manquants', message: 'Merci de remplir tous les champs obligatoires.', variant: 'warning' });
       return;
     }
@@ -53,7 +59,7 @@ export default function InscriptionMedecinScreen() {
     setLoading(true);
     try {
       await inscrireMedecin({
-        email, password, nom, prenom, specialite, adresseCabinet,
+        email, password, nom, prenom, specialite, adresseCabinet, regionId,
         telephone: telephone || undefined,
       });
       setDone(true);
@@ -154,6 +160,24 @@ export default function InscriptionMedecinScreen() {
           </View>
 
           <View style={styles.fieldGroup}>
+            <Text style={styles.label}>Région</Text>
+            <View style={styles.chipsWrap}>
+              {regions.map((opt) => (
+                <TouchableOpacity
+                  key={opt.valeur}
+                  style={[styles.chip, regionId === opt.valeur && styles.chipActive]}
+                  onPress={() => setRegionId(opt.valeur)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[styles.chipText, regionId === opt.valeur && styles.chipTextActive]}>
+                    {opt.libelle}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
+          <View style={styles.fieldGroup}>
             <Text style={styles.label}>Téléphone (optionnel)</Text>
             <TextInput style={styles.input} value={telephone} onChangeText={setTelephone} keyboardType="phone-pad" placeholder="+216 .." />
           </View>
@@ -203,17 +227,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20,
     backgroundColor: '#ffffff', borderWidth: 1.5, borderColor: '#e2e8f0',
   },
-  chipActive: { backgroundColor: '#eff6ff', borderColor: '#3b82f6' },
+  chipActive: { backgroundColor: '#f0fdf4', borderColor: '#16a34a' },
   chipText: { fontSize: 12, fontWeight: '600', color: '#475569' },
-  chipTextActive: { color: '#2563eb' },
+  chipTextActive: { color: '#15803d' },
   infoBanner: {
-    backgroundColor: '#eff6ff', borderWidth: 1, borderColor: '#dbeafe', borderRadius: 12,
+    backgroundColor: '#f0fdf4', borderWidth: 1, borderColor: '#dcfce7', borderRadius: 12,
     padding: 12, marginBottom: 18,
   },
-  infoBannerText: { fontSize: 12, color: '#1d4ed8', lineHeight: 17 },
+  infoBannerText: { fontSize: 12, color: '#166534', lineHeight: 17 },
   button: {
-    backgroundColor: '#3b82f6', borderRadius: 14, paddingVertical: 15, alignItems: 'center',
-    shadowColor: '#3b82f6', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.35, shadowRadius: 12, elevation: 4,
+    backgroundColor: '#16a34a', borderRadius: 14, paddingVertical: 15, alignItems: 'center',
+    shadowColor: '#16a34a', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.35, shadowRadius: 12, elevation: 4,
   },
   buttonDisabled: { opacity: 0.7 },
   buttonText: { color: '#ffffff', fontWeight: '700', fontSize: 15 },

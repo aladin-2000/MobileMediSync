@@ -21,10 +21,11 @@ const formatFriendlyDate = (dateStr) => {
 
 const getTodayString = () => new Date().toISOString().split('T')[0];
 
-export default function FilterSection({ filters, onFilterChange, onReset, onApply, specialites = [] }) {
+export default function FilterSection({ filters, onFilterChange, onReset, onApply, specialites = [], regions = [] }) {
   const [expanded, setExpanded] = useState(false);
   const [calendarVisible, setCalendarVisible] = useState(false);
   const [specialiteDropdownVisible, setSpecialiteDropdownVisible] = useState(false);
+  const [regionDropdownVisible, setRegionDropdownVisible] = useState(false);
   const [editingTimeField, setEditingTimeField] = useState(null); // 'heureDebut' | 'heureFin' | null
 
   const isPastDate = filters.date < getTodayString();
@@ -49,6 +50,17 @@ export default function FilterSection({ filters, onFilterChange, onReset, onAppl
     onFilterChange('date', dateStr);
     setCalendarVisible(false);
   };
+
+  // Region is a single-select: pick one value and close, unlike specialty's checkbox list
+  const selectRegion = (valeur) => {
+    onFilterChange('regionId', valeur);
+    setRegionDropdownVisible(false);
+  };
+
+  const regionLabel = (() => {
+    if (!filters.regionId) return 'Toutes les régions';
+    return regions.find((r) => r.valeur === filters.regionId)?.libelle ?? filters.regionId;
+  })();
 
   const handleTimeChange = (value) => {
     onFilterChange(editingTimeField, value);
@@ -113,6 +125,17 @@ export default function FilterSection({ filters, onFilterChange, onReset, onAppl
           >
             <Text style={styles.dateFieldEmoji}>🩺</Text>
             <Text style={styles.dateFieldText}>{specialitesLabel}</Text>
+          </TouchableOpacity>
+
+          {/* Region Filter - single-select dropdown */}
+          <Text style={styles.sectionTitle}>Région</Text>
+          <TouchableOpacity
+            style={styles.dateField}
+            onPress={() => setRegionDropdownVisible(true)}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.dateFieldEmoji}>📍</Text>
+            <Text style={styles.dateFieldText}>{regionLabel}</Text>
           </TouchableOpacity>
 
           {/* Time Range Filter - tap to pick with the OS's native time picker */}
@@ -237,6 +260,59 @@ export default function FilterSection({ filters, onFilterChange, onReset, onAppl
           </TouchableOpacity>
         </TouchableOpacity>
       </Modal>
+
+      {/* Region Dropdown Modal - liste à choix unique, comme le web */}
+      <Modal
+        visible={regionDropdownVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setRegionDropdownVisible(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalBackdrop}
+          activeOpacity={1}
+          onPress={() => setRegionDropdownVisible(false)}
+        >
+          <TouchableOpacity activeOpacity={1} onPress={() => {}} style={styles.specialiteCard}>
+            <Text style={styles.specialiteCardTitle}>Région</Text>
+            <ScrollView style={styles.specialiteList}>
+              <TouchableOpacity
+                style={styles.specialiteOption}
+                onPress={() => selectRegion('')}
+                activeOpacity={0.7}
+              >
+                <View style={[styles.checkbox, !filters.regionId && styles.checkboxChecked]}>
+                  {!filters.regionId && <Text style={styles.checkboxMark}>✓</Text>}
+                </View>
+                <Text style={styles.specialiteOptionText}>Toutes les régions</Text>
+              </TouchableOpacity>
+              {regions.map((opt) => {
+                const isSelected = filters.regionId === opt.valeur;
+                return (
+                  <TouchableOpacity
+                    key={opt.valeur}
+                    style={styles.specialiteOption}
+                    onPress={() => selectRegion(opt.valeur)}
+                    activeOpacity={0.7}
+                  >
+                    <View style={[styles.checkbox, isSelected && styles.checkboxChecked]}>
+                      {isSelected && <Text style={styles.checkboxMark}>✓</Text>}
+                    </View>
+                    <Text style={styles.specialiteOptionText}>{opt.libelle}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+            <TouchableOpacity
+              style={styles.specialiteCloseButton}
+              onPress={() => setRegionDropdownVisible(false)}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.modalCloseButtonText}>Fermer</Text>
+            </TouchableOpacity>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 }
@@ -315,7 +391,7 @@ const styles = StyleSheet.create({
   },
   expandToggleText: {
     fontSize: 13,
-    color: '#3b82f6',
+    color: '#16a34a',
     fontWeight: '700',
   },
   resetLinkText: {
@@ -326,7 +402,7 @@ const styles = StyleSheet.create({
   },
   applyButton: {
     marginTop: 14,
-    backgroundColor: '#3b82f6',
+    backgroundColor: '#16a34a',
     paddingVertical: 12,
     borderRadius: 10,
     alignItems: 'center',
@@ -349,7 +425,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginTop: -8,
     marginBottom: 16,
-    backgroundColor: '#3b82f6',
+    backgroundColor: '#16a34a',
     paddingVertical: 12,
     borderRadius: 10,
     alignItems: 'center',
@@ -396,8 +472,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   checkboxChecked: {
-    backgroundColor: '#3b82f6',
-    borderColor: '#3b82f6',
+    backgroundColor: '#16a34a',
+    borderColor: '#16a34a',
   },
   checkboxMark: {
     fontSize: 12,
@@ -411,7 +487,7 @@ const styles = StyleSheet.create({
   },
   specialiteCloseButton: {
     marginTop: 12,
-    backgroundColor: '#3b82f6',
+    backgroundColor: '#16a34a',
     paddingVertical: 12,
     borderRadius: 10,
     alignItems: 'center',

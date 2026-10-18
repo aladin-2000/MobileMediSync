@@ -8,6 +8,11 @@ export async function getSpecialites() {
   return apiRequest('/medecins/specialites', { auth: false });
 }
 
+/** GET /medecins/regions — liste des régions (valeur + libellé), pour le filtre de recherche délégué et l'inscription médecin. */
+export async function getRegions() {
+  return apiRequest('/medecins/regions', { auth: false });
+}
+
 /** GET /api/laboratoires — liste des laboratoires, pour le sélecteur d'inscription délégué. */
 export async function getLaboratoires() {
   return apiRequest('/api/laboratoires', { auth: false });
@@ -95,12 +100,19 @@ export async function updateMonProfilDelegue(payload) {
  * GET /medecins/recherche — recherche publique de médecins disponibles.
  * `specialite` est un tableau de valeurs d'enum (ex: ['CARDIOLOGIE', 'DERMATOLOGIE']) —
  * le backend accepte une ou plusieurs spécialités via le paramètre `specialites`.
+ * `regionId` filtre par région (id renvoyé par getRegions(), optionnel).
+ *
+ * Le backend exige une plage de dates (`searchDateDebut`/`searchDateFin`, obligatoires,
+ * il n'accepte plus de `date` unique) — la recherche mobile ne porte que sur un seul
+ * jour de visite, donc on envoie la même date aux deux bornes de la plage.
  */
-export async function rechercherMedecins({ nom, specialite, date, heureDebut, heureFin } = {}) {
+export async function rechercherMedecins({ nom, specialite, regionId, date, heureDebut, heureFin } = {}) {
   const params = new URLSearchParams();
   if (nom) params.append('nom', nom);
   if (specialite && specialite.length > 0) params.append('specialites', specialite.join(','));
-  params.append('date', date);
+  if (regionId) params.append('regionId', regionId);
+  params.append('searchDateDebut', date);
+  params.append('searchDateFin', date);
   if (heureDebut) params.append('heureDebut', `${heureDebut}:00`);
   if (heureFin) params.append('heureFin', `${heureFin}:00`);
 

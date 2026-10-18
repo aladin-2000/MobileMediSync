@@ -61,7 +61,7 @@ export default function HomeScreen({ role = 'DELEGUE' }) {
   if (loading && rendezvous.length === 0) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#3b82f6" />
+        <ActivityIndicator size="large" color="#16a34a" />
       </View>
     );
   }
@@ -163,11 +163,11 @@ const styles = StyleSheet.create({
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#f8fafc' },
   scrollContent: { padding: 16, paddingBottom: 32 },
   hero: {
-    backgroundColor: '#eff6ff', borderRadius: 16, padding: 18, marginBottom: 16,
-    borderWidth: 1, borderColor: '#dbeafe',
+    backgroundColor: '#f0fdf4', borderRadius: 16, padding: 18, marginBottom: 16,
+    borderWidth: 1, borderColor: '#dcfce7',
   },
   heroTopRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 },
-  heroEyebrow: { fontSize: 11, fontWeight: '700', color: '#3b82f6', textTransform: 'capitalize' },
+  heroEyebrow: { fontSize: 11, fontWeight: '700', color: '#16a34a', textTransform: 'capitalize' },
   heroTitle: { fontSize: 19, fontWeight: '800', color: '#0f172a' },
   heroSubtitle: { fontSize: 12, color: '#64748b', marginTop: 4 },
   statsRow: { flexDirection: 'row', gap: 10, marginBottom: 16 },
@@ -179,7 +179,7 @@ const styles = StyleSheet.create({
   statLabel: { fontSize: 10, color: '#64748b', marginTop: 2, textAlign: 'center' },
   quickActions: { flexDirection: 'row', gap: 10, marginBottom: 20 },
   quickAction: {
-    flex: 1, backgroundColor: '#3b82f6', borderRadius: 14, paddingVertical: 14, alignItems: 'center',
+    flex: 1, backgroundColor: '#16a34a', borderRadius: 14, paddingVertical: 14, alignItems: 'center',
   },
   quickActionIcon: { fontSize: 20, marginBottom: 4 },
   quickActionText: { fontSize: 12, fontWeight: '700', color: '#ffffff', textAlign: 'center' },
@@ -195,15 +195,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#ffffff', borderRadius: 10,
     padding: 12, marginBottom: 8, borderWidth: 1, borderColor: '#f1f5f9',
   },
-  agendaTime: { fontSize: 13, fontWeight: '800', color: '#3b82f6', width: 46 },
+  agendaTime: { fontSize: 13, fontWeight: '800', color: '#16a34a', width: 46 },
   agendaName: { fontSize: 13, fontWeight: '600', color: '#0f172a', flex: 1 },
   notifRow: {
     flexDirection: 'row', alignItems: 'flex-start', gap: 8, backgroundColor: '#ffffff', borderRadius: 10,
     padding: 10, marginBottom: 6, borderWidth: 1, borderColor: '#f1f5f9',
   },
-  notifRowUnread: { backgroundColor: '#f5f9ff', borderColor: '#dbeafe' },
+  notifRowUnread: { backgroundColor: '#f5f9ff', borderColor: '#dcfce7' },
   notifIcon: { fontSize: 14 },
   notifText: { fontSize: 12.5, color: '#334155', flex: 1 },
   linkButton: { alignItems: 'center', marginTop: 6, paddingVertical: 8 },
-  linkButtonText: { fontSize: 12, fontWeight: '700', color: '#3b82f6' },
+  linkButtonText: { fontSize: 12, fontWeight: '700', color: '#16a34a' },
 });
