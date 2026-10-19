@@ -106,13 +106,13 @@ export async function updateMonProfilDelegue(payload) {
  * il n'accepte plus de `date` unique) — la recherche mobile ne porte que sur un seul
  * jour de visite, donc on envoie la même date aux deux bornes de la plage.
  */
-export async function rechercherMedecins({ nom, specialite, regionId, date, heureDebut, heureFin } = {}) {
+export async function rechercherMedecins({ nom, specialite, regionId, dateDebut, dateFin, heureDebut, heureFin } = {}) {
   const params = new URLSearchParams();
   if (nom) params.append('nom', nom);
   if (specialite && specialite.length > 0) params.append('specialites', specialite.join(','));
   if (regionId) params.append('regionId', regionId);
-  params.append('searchDateDebut', date);
-  params.append('searchDateFin', date);
+  params.append('searchDateDebut', dateDebut);
+  params.append('searchDateFin', dateFin || dateDebut);
   if (heureDebut) params.append('heureDebut', `${heureDebut}:00`);
   if (heureFin) params.append('heureFin', `${heureFin}:00`);
 
@@ -248,6 +248,13 @@ export async function supprimerJour(medecinId, date) {
   return apiRequest(`/medecins/creneaux/supprimer-une-plage-de-creneaux?medecinId=${medecinId}`, {
     method: 'DELETE',
     body: { dateDebut: date, dateFin: date, heureDebut: '00:00:00', heureFin: '23:59:59' },
+  });
+}
+
+/** Supprimer un seul créneau libre par son id. */
+export async function supprimerCreneau(medecinId, creneauId) {
+  return apiRequest(`/medecins/creneaux/supprimer-un-creneau?creneauId=${creneauId}&medecinId=${medecinId}`, {
+    method: 'DELETE',
   });
 }
 

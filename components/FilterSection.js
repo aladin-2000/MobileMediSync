@@ -9,7 +9,6 @@ const MONTHS_FR = [
   'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
 ];
 
-// Format a YYYY-MM-DD string as "22 Juillet 2026"
 const formatFriendlyDate = (dateStr) => {
   const parts = dateStr.split('-');
   if (parts.length !== 3) return dateStr;
@@ -22,15 +21,13 @@ const formatFriendlyDate = (dateStr) => {
 const getTodayString = () => new Date().toISOString().split('T')[0];
 
 export default function FilterSection({ filters, onFilterChange, onReset, onApply, specialites = [], regions = [] }) {
-  const [expanded, setExpanded] = useState(false);
-  const [calendarVisible, setCalendarVisible] = useState(false);
+  const [calendarTarget, setCalendarTarget] = useState(null); // 'dateDebut' | 'dateFin' | null
   const [specialiteDropdownVisible, setSpecialiteDropdownVisible] = useState(false);
   const [regionDropdownVisible, setRegionDropdownVisible] = useState(false);
-  const [editingTimeField, setEditingTimeField] = useState(null); // 'heureDebut' | 'heureFin' | null
+  const [editingTimeField, setEditingTimeField] = useState(null);
 
-  const isPastDate = filters.date < getTodayString();
+  const isPastDate = filters.dateDebut < getTodayString();
 
-  // Specialty is a multi-select: toggle the value in/out of the array
   const toggleSpecialite = (spec) => {
     const current = filters.specialite || [];
     const next = current.includes(spec)
@@ -43,15 +40,17 @@ export default function FilterSection({ filters, onFilterChange, onReset, onAppl
     const selected = filters.specialite || [];
     if (selected.length === 0) return 'Toutes les spécialités';
     if (selected.length === 1) return specialites.find((s) => s.valeur === selected[0])?.libelle ?? selected[0];
-    return `${selected.length} spécialités sélectionnées`;
+    return `${selected.length} spécialités`;
   })();
 
   const handleDaySelect = (dateStr) => {
-    onFilterChange('date', dateStr);
-    setCalendarVisible(false);
+    onFilterChange(calendarTarget, dateStr);
+    if (calendarTarget === 'dateDebut' && dateStr > filters.dateFin) {
+      onFilterChange('dateFin', dateStr);
+    }
+    setCalendarTarget(null);
   };
 
-  // Region is a single-select: pick one value and close, unlike specialty's checkbox list
   const selectRegion = (valeur) => {
     onFilterChange('regionId', valeur);
     setRegionDropdownVisible(false);
@@ -66,142 +65,139 @@ export default function FilterSection({ filters, onFilterChange, onReset, onAppl
     onFilterChange(editingTimeField, value);
   };
 
-  // "Plus/Moins de filtres" toggle, with a subtle "Réinitialiser" link next to it once expanded
-  // (no more a full-width red button competing visually with "Lancer la recherche").
-  const toggleRow = (
-    <View style={styles.toggleRow}>
-      <TouchableOpacity onPress={() => setExpanded(!expanded)} activeOpacity={0.7}>
-        <Text style={styles.expandToggleText}>
-          {expanded ? 'Moins de filtres ▲' : 'Plus de filtres ▼'}
-        </Text>
-      </TouchableOpacity>
-      {expanded && (
+  return (
+    <View style={styles.container}>
+      <View style={styles.headerRow}>
+        <Text style={styles.mainTitle}>Trouver un médecin</Text>
         <TouchableOpacity onPress={onReset} activeOpacity={0.7}>
           <Text style={styles.resetLinkText}>Réinitialiser</Text>
         </TouchableOpacity>
-      )}
-    </View>
-  );
+      </View>
 
-  return (
-    <View style={styles.container}>
-      {/* Date Filter - always visible */}
-      <Text style={styles.sectionTitle}>Date de visite</Text>
-      <TouchableOpacity
-        style={styles.dateField}
-        onPress={() => setCalendarVisible(true)}
-        activeOpacity={0.7}
-      >
-        <Text style={styles.dateFieldEmoji}>📅</Text>
-        <Text style={styles.dateFieldText}>
-          {filters.date ? formatFriendlyDate(filters.date) : 'Sélectionner une date'}
-        </Text>
-      </TouchableOpacity>
+      {/* Nom */}
+      <Text style={styles.sectionTitle}>Nom</Text>
+      <TextInput
+        style={styles.searchInput}
+        placeholder="Nom du médecin"
+        placeholderTextColor="#94a3b8"
+        value={filters.nom || ''}
+        onChangeText={(text) => onFilterChange('nom', text)}
+      />
 
-      {isPastDate && (
-        <Text style={styles.pastDateWarning}>⚠️ Cette date est déjà passée.</Text>
-      )}
-
-      {toggleRow}
-
-      {expanded && (
-        <>
-          {/* Search Input */}
-          <Text style={styles.sectionTitle}>Rechercher par nom</Text>
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Entrez le nom du médecin..."
-            placeholderTextColor="#94a3b8"
-            value={filters.nom || ''}
-            onChangeText={(text) => onFilterChange('nom', text)}
-          />
-
-          {/* Specialty Filter - liste déroulante à cases à cocher, une ou plusieurs spécialités */}
+      {/* Spécialité & Région on same row */}
+      <View style={styles.row}>
+        <View style={styles.half}>
           <Text style={styles.sectionTitle}>Spécialité</Text>
           <TouchableOpacity
-            style={styles.dateField}
+            style={styles.selectField}
             onPress={() => setSpecialiteDropdownVisible(true)}
             activeOpacity={0.7}
           >
-            <Text style={styles.dateFieldEmoji}>🩺</Text>
-            <Text style={styles.dateFieldText}>{specialitesLabel}</Text>
+            <Text style={styles.selectFieldText} numberOfLines={1}>{specialitesLabel}</Text>
+            <Text style={styles.chevron}>▾</Text>
           </TouchableOpacity>
-
-          {/* Region Filter - single-select dropdown */}
+        </View>
+        <View style={styles.half}>
           <Text style={styles.sectionTitle}>Région</Text>
           <TouchableOpacity
-            style={styles.dateField}
+            style={styles.selectField}
             onPress={() => setRegionDropdownVisible(true)}
             activeOpacity={0.7}
           >
-            <Text style={styles.dateFieldEmoji}>📍</Text>
-            <Text style={styles.dateFieldText}>{regionLabel}</Text>
+            <Text style={styles.selectFieldText} numberOfLines={1}>{regionLabel}</Text>
+            <Text style={styles.chevron}>▾</Text>
           </TouchableOpacity>
+        </View>
+      </View>
 
-          {/* Time Range Filter - tap to pick with the OS's native time picker */}
-          <Text style={styles.sectionTitle}>Plage horaire</Text>
-          <View style={styles.timeFieldRow}>
-            <TouchableOpacity
-              style={[styles.dateField, styles.timeField]}
-              onPress={() => setEditingTimeField('heureDebut')}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.dateFieldEmoji}>🕐</Text>
-              <Text style={styles.dateFieldText}>{filters.heureDebut || 'Heure début'}</Text>
-              {filters.heureDebut ? (
-                <TouchableOpacity onPress={() => onFilterChange('heureDebut', '')} hitSlop={8}>
-                  <Text style={styles.clearIcon}>✕</Text>
-                </TouchableOpacity>
-              ) : null}
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.dateField, styles.timeField]}
-              onPress={() => setEditingTimeField('heureFin')}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.dateFieldEmoji}>🕐</Text>
-              <Text style={styles.dateFieldText}>{filters.heureFin || 'Heure fin'}</Text>
-              {filters.heureFin ? (
-                <TouchableOpacity onPress={() => onFilterChange('heureFin', '')} hitSlop={8}>
-                  <Text style={styles.clearIcon}>✕</Text>
-                </TouchableOpacity>
-              ) : null}
-            </TouchableOpacity>
-          </View>
+      {/* Date range Du / Au */}
+      <Text style={styles.sectionTitle}>Période de disponibilité</Text>
+      <View style={styles.row}>
+        <View style={styles.half}>
+          <TouchableOpacity
+            style={styles.selectField}
+            onPress={() => setCalendarTarget('dateDebut')}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.fieldLabel}>Du</Text>
+            <Text style={styles.selectFieldText} numberOfLines={1}>
+              {filters.dateDebut ? formatFriendlyDate(filters.dateDebut) : 'Date début'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+        <View style={styles.half}>
+          <TouchableOpacity
+            style={styles.selectField}
+            onPress={() => setCalendarTarget('dateFin')}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.fieldLabel}>Au</Text>
+            <Text style={styles.selectFieldText} numberOfLines={1}>
+              {filters.dateFin ? formatFriendlyDate(filters.dateFin) : 'Date fin'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
 
-        </>
+      {isPastDate && (
+        <Text style={styles.pastDateWarning}>Cette date de début est déjà passée.</Text>
       )}
 
-      {/* Apply button - disabled when the chosen visit date is in the past */}
+      {/* Time range */}
+      <Text style={styles.sectionTitle}>Plage horaire</Text>
+      <View style={styles.row}>
+        <View style={styles.half}>
+          <TouchableOpacity
+            style={styles.selectField}
+            onPress={() => setEditingTimeField('heureDebut')}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.fieldLabel}>De</Text>
+            <Text style={styles.selectFieldText}>{filters.heureDebut || 'Début'}</Text>
+          </TouchableOpacity>
+        </View>
+        <View style={styles.half}>
+          <TouchableOpacity
+            style={styles.selectField}
+            onPress={() => setEditingTimeField('heureFin')}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.fieldLabel}>À</Text>
+            <Text style={styles.selectFieldText}>{filters.heureFin || 'Fin'}</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* Search button */}
       <TouchableOpacity
         style={[styles.applyButton, isPastDate && styles.applyButtonDisabled]}
         onPress={onApply}
         disabled={isPastDate}
         activeOpacity={0.8}
       >
-        <Text style={styles.applyButtonText}>Lancer la recherche</Text>
+        <Text style={styles.applyButtonText}>Rechercher</Text>
       </TouchableOpacity>
 
-      {/* Date Picker Modal */}
+      {/* Calendar Modal */}
       <Modal
-        visible={calendarVisible}
+        visible={calendarTarget !== null}
         transparent
         animationType="fade"
-        onRequestClose={() => setCalendarVisible(false)}
+        onRequestClose={() => setCalendarTarget(null)}
       >
         <TouchableOpacity
           style={styles.modalBackdrop}
           activeOpacity={1}
-          onPress={() => setCalendarVisible(false)}
+          onPress={() => setCalendarTarget(null)}
         >
           <TouchableOpacity activeOpacity={1} onPress={() => {}}>
             <CustomCalendar
-              selectedDate={filters.date || getTodayString()}
+              selectedDate={calendarTarget ? (filters[calendarTarget] || getTodayString()) : getTodayString()}
               onDaySelect={handleDaySelect}
             />
             <TouchableOpacity
               style={styles.modalCloseButton}
-              onPress={() => setCalendarVisible(false)}
+              onPress={() => setCalendarTarget(null)}
               activeOpacity={0.8}
             >
               <Text style={styles.modalCloseButtonText}>Fermer</Text>
@@ -210,7 +206,7 @@ export default function FilterSection({ filters, onFilterChange, onReset, onAppl
         </TouchableOpacity>
       </Modal>
 
-      {/* Time Picker (shared by "Heure début" and "Heure fin") */}
+      {/* Time Picker */}
       <TimePicker
         visible={editingTimeField !== null}
         value={editingTimeField ? filters[editingTimeField] : ''}
@@ -218,7 +214,7 @@ export default function FilterSection({ filters, onFilterChange, onReset, onAppl
         onClose={() => setEditingTimeField(null)}
       />
 
-      {/* Specialty Dropdown Modal - liste à cases à cocher, comme le web */}
+      {/* Specialty Dropdown Modal */}
       <Modal
         visible={specialiteDropdownVisible}
         transparent
@@ -230,28 +226,28 @@ export default function FilterSection({ filters, onFilterChange, onReset, onAppl
           activeOpacity={1}
           onPress={() => setSpecialiteDropdownVisible(false)}
         >
-          <TouchableOpacity activeOpacity={1} onPress={() => {}} style={styles.specialiteCard}>
-            <Text style={styles.specialiteCardTitle}>Spécialités</Text>
-            <ScrollView style={styles.specialiteList}>
+          <TouchableOpacity activeOpacity={1} onPress={() => {}} style={styles.pickerCard}>
+            <Text style={styles.pickerCardTitle}>Spécialités</Text>
+            <ScrollView style={styles.pickerList}>
               {specialites.map((opt) => {
                 const isSelected = (filters.specialite || []).includes(opt.valeur);
                 return (
                   <TouchableOpacity
                     key={opt.valeur}
-                    style={styles.specialiteOption}
+                    style={styles.pickerOption}
                     onPress={() => toggleSpecialite(opt.valeur)}
                     activeOpacity={0.7}
                   >
                     <View style={[styles.checkbox, isSelected && styles.checkboxChecked]}>
                       {isSelected && <Text style={styles.checkboxMark}>✓</Text>}
                     </View>
-                    <Text style={styles.specialiteOptionText}>{opt.libelle}</Text>
+                    <Text style={styles.pickerOptionText}>{opt.libelle}</Text>
                   </TouchableOpacity>
                 );
               })}
             </ScrollView>
             <TouchableOpacity
-              style={styles.specialiteCloseButton}
+              style={styles.pickerCloseButton}
               onPress={() => setSpecialiteDropdownVisible(false)}
               activeOpacity={0.8}
             >
@@ -261,7 +257,7 @@ export default function FilterSection({ filters, onFilterChange, onReset, onAppl
         </TouchableOpacity>
       </Modal>
 
-      {/* Region Dropdown Modal - liste à choix unique, comme le web */}
+      {/* Region Dropdown Modal */}
       <Modal
         visible={regionDropdownVisible}
         transparent
@@ -273,38 +269,38 @@ export default function FilterSection({ filters, onFilterChange, onReset, onAppl
           activeOpacity={1}
           onPress={() => setRegionDropdownVisible(false)}
         >
-          <TouchableOpacity activeOpacity={1} onPress={() => {}} style={styles.specialiteCard}>
-            <Text style={styles.specialiteCardTitle}>Région</Text>
-            <ScrollView style={styles.specialiteList}>
+          <TouchableOpacity activeOpacity={1} onPress={() => {}} style={styles.pickerCard}>
+            <Text style={styles.pickerCardTitle}>Région</Text>
+            <ScrollView style={styles.pickerList}>
               <TouchableOpacity
-                style={styles.specialiteOption}
+                style={styles.pickerOption}
                 onPress={() => selectRegion('')}
                 activeOpacity={0.7}
               >
                 <View style={[styles.checkbox, !filters.regionId && styles.checkboxChecked]}>
                   {!filters.regionId && <Text style={styles.checkboxMark}>✓</Text>}
                 </View>
-                <Text style={styles.specialiteOptionText}>Toutes les régions</Text>
+                <Text style={styles.pickerOptionText}>Toutes les régions</Text>
               </TouchableOpacity>
               {regions.map((opt) => {
                 const isSelected = filters.regionId === opt.valeur;
                 return (
                   <TouchableOpacity
                     key={opt.valeur}
-                    style={styles.specialiteOption}
+                    style={styles.pickerOption}
                     onPress={() => selectRegion(opt.valeur)}
                     activeOpacity={0.7}
                   >
                     <View style={[styles.checkbox, isSelected && styles.checkboxChecked]}>
                       {isSelected && <Text style={styles.checkboxMark}>✓</Text>}
                     </View>
-                    <Text style={styles.specialiteOptionText}>{opt.libelle}</Text>
+                    <Text style={styles.pickerOptionText}>{opt.libelle}</Text>
                   </TouchableOpacity>
                 );
               })}
             </ScrollView>
             <TouchableOpacity
-              style={styles.specialiteCloseButton}
+              style={styles.pickerCloseButton}
               onPress={() => setRegionDropdownVisible(false)}
               activeOpacity={0.8}
             >
@@ -324,75 +320,16 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#e2e8f0',
   },
-  sectionTitle: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#475569',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginTop: 10,
-    marginBottom: 6,
-  },
-  searchInput: {
-    backgroundColor: '#f8fafc',
-    borderWidth: 1,
-    borderColor: '#cbd5e1',
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 14,
-    color: '#0f172a',
-    marginBottom: 8,
-  },
-  clearIcon: {
-    fontSize: 13,
-    color: '#94a3b8',
-    fontWeight: '800',
-    marginLeft: 'auto',
-  },
-  timeFieldRow: {
+  headerRow: {
     flexDirection: 'row',
-    gap: 8,
-  },
-  timeField: {
-    flex: 1,
-  },
-  dateField: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f8fafc',
-    borderWidth: 1,
-    borderColor: '#cbd5e1',
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    gap: 8,
-  },
-  dateFieldEmoji: {
-    fontSize: 16,
-  },
-  dateFieldText: {
-    fontSize: 14,
-    color: '#0f172a',
-    fontWeight: '600',
-  },
-  pastDateWarning: {
-    fontSize: 12,
-    color: '#b45309',
-    fontWeight: '600',
-    marginTop: 6,
-  },
-  toggleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    marginTop: 10,
-    marginBottom: 2,
+    alignItems: 'center',
+    marginBottom: 12,
   },
-  expandToggleText: {
-    fontSize: 13,
-    color: '#16a34a',
-    fontWeight: '700',
+  mainTitle: {
+    fontSize: 17,
+    fontWeight: '800',
+    color: '#0f172a',
   },
   resetLinkText: {
     fontSize: 12,
@@ -400,9 +337,72 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     textDecorationLine: 'underline',
   },
+  sectionTitle: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#475569',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginTop: 10,
+    marginBottom: 5,
+  },
+  row: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  half: {
+    flex: 1,
+  },
+  searchInput: {
+    backgroundColor: '#f8fafc',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 14,
+    color: '#0f172a',
+  },
+  selectField: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f8fafc',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 10,
+    gap: 6,
+  },
+  selectFieldText: {
+    flex: 1,
+    fontSize: 13,
+    color: '#0f172a',
+    fontWeight: '600',
+  },
+  fieldLabel: {
+    fontSize: 12,
+    color: '#94a3b8',
+    fontWeight: '600',
+  },
+  chevron: {
+    fontSize: 12,
+    color: '#94a3b8',
+  },
+  clearIcon: {
+    fontSize: 12,
+    color: '#94a3b8',
+    fontWeight: '800',
+  },
+  pastDateWarning: {
+    fontSize: 12,
+    color: '#b45309',
+    fontWeight: '600',
+    marginTop: 6,
+  },
   applyButton: {
     marginTop: 14,
-    backgroundColor: '#16a34a',
+    backgroundColor: '#059669',
     paddingVertical: 12,
     borderRadius: 10,
     alignItems: 'center',
@@ -425,7 +425,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginTop: -8,
     marginBottom: 16,
-    backgroundColor: '#16a34a',
+    backgroundColor: '#059669',
     paddingVertical: 12,
     borderRadius: 10,
     alignItems: 'center',
@@ -435,7 +435,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontSize: 14,
   },
-  specialiteCard: {
+  pickerCard: {
     backgroundColor: '#ffffff',
     borderRadius: 16,
     padding: 16,
@@ -443,17 +443,17 @@ const styles = StyleSheet.create({
     width: '85%',
     maxHeight: '70%',
   },
-  specialiteCardTitle: {
+  pickerCardTitle: {
     fontSize: 15,
     fontWeight: '800',
     color: '#0f172a',
     textAlign: 'center',
     marginBottom: 8,
   },
-  specialiteList: {
+  pickerList: {
     maxHeight: 320,
   },
-  specialiteOption: {
+  pickerOption: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
@@ -472,22 +472,22 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   checkboxChecked: {
-    backgroundColor: '#16a34a',
-    borderColor: '#16a34a',
+    backgroundColor: '#059669',
+    borderColor: '#059669',
   },
   checkboxMark: {
     fontSize: 12,
     color: '#ffffff',
     fontWeight: '800',
   },
-  specialiteOptionText: {
+  pickerOptionText: {
     fontSize: 14,
     color: '#334155',
     fontWeight: '600',
   },
-  specialiteCloseButton: {
+  pickerCloseButton: {
     marginTop: 12,
-    backgroundColor: '#16a34a',
+    backgroundColor: '#059669',
     paddingVertical: 12,
     borderRadius: 10,
     alignItems: 'center',

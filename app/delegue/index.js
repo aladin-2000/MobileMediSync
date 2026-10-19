@@ -31,9 +31,10 @@ const EMPTY_FILTERS = {
   nom: '',
   specialite: [],
   regionId: '',
-  date: getTodayString(),
-  heureDebut: '',
-  heureFin: ''
+  dateDebut: getTodayString(),
+  dateFin: getTodayString(),
+  heureDebut: '08:00',
+  heureFin: '17:00'
 };
 
 export default function DoctorSearchScreen() {
@@ -96,11 +97,11 @@ export default function DoctorSearchScreen() {
   // Show the doctor's available slots for the currently chosen visit date
   const loadSlots = (doctor) => {
     setSlotsLoading(true);
-    getCreneauxMedecin(doctor.id, filters.date, filters.date)
+    getCreneauxMedecin(doctor.id, filters.dateDebut, filters.dateFin || filters.dateDebut)
       .then((creneaux) => setSlots(
         creneaux
           .filter((c) => c.statut === 'DISPONIBLE')
-          .sort((a, b) => a.heureDebut.localeCompare(b.heureDebut))
+          .sort((a, b) => (a.date + a.heureDebut).localeCompare(b.date + b.heureDebut))
       ))
       .catch((error) => {
         console.error('Error fetching doctor slots:', error);
@@ -122,7 +123,7 @@ export default function DoctorSearchScreen() {
   const handleBookSlot = async (creneau) => {
     const ok = await confirm({
       title: 'Réserver ce créneau ?',
-      message: `${selectedDoctor?.nom} — ${formatFriendlyDate(filters.date)} à ${creneau.heureDebut}`,
+      message: `${selectedDoctor?.nom} — ${formatFriendlyDate(creneau.date)} à ${creneau.heureDebut}`,
       variant: 'question',
       confirmText: 'Réserver',
       cancelText: 'Annuler',
@@ -135,7 +136,7 @@ export default function DoctorSearchScreen() {
       handleCloseSlots();
       notify({
         title: 'Rendez-vous réservé',
-        message: `Créneau du ${filters.date} à ${creneau.heureDebut} confirmé.`,
+        message: `Créneau du ${creneau.date} à ${creneau.heureDebut} confirmé.`,
         variant: 'success',
       });
     } catch (error) {
@@ -151,7 +152,7 @@ export default function DoctorSearchScreen() {
     val => (Array.isArray(val) ? val.length > 0 : val !== '')
   ).length;
 
-  const isPastDate = filters.date < getTodayString();
+  const isPastDate = filters.dateDebut < getTodayString();
 
   return (
     <View style={styles.container}>
@@ -197,7 +198,7 @@ export default function DoctorSearchScreen() {
             </View>
           ) : loading ? (
             <View style={styles.centered}>
-              <ActivityIndicator size="large" color="#16a34a" />
+              <ActivityIndicator size="large" color="#059669" />
               <Text style={styles.loadingText}>Chargement des médecins...</Text>
             </View>
           ) : (
@@ -220,28 +221,44 @@ export default function DoctorSearchScreen() {
         <TouchableOpacity style={styles.modalBackdrop} activeOpacity={1} onPress={handleCloseSlots}>
           <TouchableOpacity activeOpacity={1} onPress={() => {}} style={styles.slotsCard}>
             <Text style={styles.slotsDoctorName}>{selectedDoctor?.nom}</Text>
-            <Text style={styles.slotsDate}>{formatFriendlyDate(filters.date)}</Text>
+            <Text style={styles.slotsDate}>
+              {filters.dateDebut === filters.dateFin
+                ? formatFriendlyDate(filters.dateDebut)
+                : `${formatFriendlyDate(filters.dateDebut)} → ${formatFriendlyDate(filters.dateFin)}`}
+            </Text>
 
             {slotsLoading ? (
-              <ActivityIndicator size="small" color="#16a34a" style={styles.slotsLoading} />
+              <ActivityIndicator size="small" color="#059669" style={styles.slotsLoading} />
             ) : slots.length > 0 ? (
-              <View style={styles.slotsGrid}>
-                {slots.map((slot) => (
-                  <TouchableOpacity
-                    key={slot.id}
-                    style={styles.slotChip}
-                    onPress={() => handleBookSlot(slot)}
-                    disabled={booking}
-                    activeOpacity={0.7}
-                  >
-                    <Text style={styles.slotChipText}>{slot.heureDebut}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
+              <FlatList
+                data={[...new Set(slots.map((s) => s.date))]}
+                keyExtractor={(d) => d}
+                style={styles.slotsList}
+                renderItem={({ item: day }) => (
+                  <View style={styles.slotDayGroup}>
+                    {filters.dateDebut !== filters.dateFin && (
+                      <Text style={styles.slotDayLabel}>{formatFriendlyDate(day)}</Text>
+                    )}
+                    <View style={styles.slotsGrid}>
+                      {slots.filter((s) => s.date === day).map((slot) => (
+                        <TouchableOpacity
+                          key={slot.id}
+                          style={styles.slotChip}
+                          onPress={() => handleBookSlot(slot)}
+                          disabled={booking}
+                          activeOpacity={0.7}
+                        >
+                          <Text style={styles.slotChipText}>{slot.heureDebut}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </View>
+                )}
+              />
             ) : (
-              <Text style={styles.slotsEmptyText}>Aucun créneau disponible ce jour-là.</Text>
+              <Text style={styles.slotsEmptyText}>Aucun créneau disponible sur cette période.</Text>
             )}
-            {booking && <ActivityIndicator size="small" color="#16a34a" style={styles.slotsLoading} />}
+            {booking && <ActivityIndicator size="small" color="#059669" style={styles.slotsLoading} />}
 
             <TouchableOpacity style={styles.modalCloseButton} onPress={handleCloseSlots} activeOpacity={0.8}>
               <Text style={styles.modalCloseButtonText}>Fermer</Text>
@@ -281,16 +298,16 @@ const styles = StyleSheet.create({
     color: '#64748b',
   },
   activeFiltersIndicator: {
-    backgroundColor: '#f0fdf4',
+    backgroundColor: '#ecfdf5',
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: '#dcfce7',
+    borderColor: '#d1fae5',
   },
   activeFiltersIndicatorText: {
     fontSize: 11,
-    color: '#166534',
+    color: '#065f46',
     fontWeight: '700',
   },
   list: {
@@ -369,6 +386,18 @@ const styles = StyleSheet.create({
     marginTop: 2,
     marginBottom: 16,
   },
+  slotsList: {
+    maxHeight: 350,
+  },
+  slotDayGroup: {
+    marginBottom: 12,
+  },
+  slotDayLabel: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#475569',
+    marginBottom: 8,
+  },
   slotsLoading: {
     marginVertical: 20,
   },
@@ -379,17 +408,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   slotChip: {
-    backgroundColor: '#f0fdf4',
+    backgroundColor: '#ecfdf5',
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#dcfce7',
+    borderColor: '#d1fae5',
   },
   slotChipText: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#166534',
+    color: '#065f46',
   },
   slotsEmptyText: {
     fontSize: 14,
@@ -399,7 +428,7 @@ const styles = StyleSheet.create({
   },
   modalCloseButton: {
     marginTop: 18,
-    backgroundColor: '#16a34a',
+    backgroundColor: '#059669',
     paddingVertical: 12,
     borderRadius: 10,
     alignItems: 'center',
