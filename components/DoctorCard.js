@@ -52,7 +52,7 @@ const styles = StyleSheet.create({
   specialty: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#16a34a',
+    color: '#059669',
     marginTop: 2,
   },
   label: {

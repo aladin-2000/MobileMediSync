@@ -132,7 +132,7 @@ export default function RendezVousMedecinScreen() {
 
       {loading ? (
         <View style={styles.centered}>
-          <ActivityIndicator size="small" color="#16a34a" />
+          <ActivityIndicator size="small" color="#059669" />
           <Text style={styles.loadingText}>Mise à jour des rendez-vous...</Text>
         </View>
       ) : !selectedDate ? (
@@ -219,16 +219,16 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   countBadge: {
-    backgroundColor: '#f0fdf4',
+    backgroundColor: '#ecfdf5',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#dcfce7',
+    borderColor: '#d1fae5',
   },
   countBadgeText: {
     fontSize: 11,
-    color: '#15803d',
+    color: '#047857',
     fontWeight: '700',
   },
   centered: {

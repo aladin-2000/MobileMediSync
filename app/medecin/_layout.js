@@ -13,7 +13,7 @@ export default function MedecinLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: '#16a34a',
+        tabBarActiveTintColor: '#059669',
         tabBarInactiveTintColor: '#64748b',
         tabBarStyle: {
           backgroundColor: '#ffffff',

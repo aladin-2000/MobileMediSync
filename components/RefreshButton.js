@@ -12,7 +12,7 @@ export default function RefreshButton({ onPress, loading = false, style }) {
       activeOpacity={0.7}
       accessibilityLabel="Rafraîchir"
     >
-      {loading ? <ActivityIndicator size="small" color="#16a34a" /> : <Text style={styles.icon}>🔄</Text>}
+      {loading ? <ActivityIndicator size="small" color="#059669" /> : <Text style={styles.icon}>🔄</Text>}
     </TouchableOpacity>
   );
 }
@@ -22,11 +22,11 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#f0fdf4',
+    backgroundColor: '#ecfdf5',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#dcfce7',
+    borderColor: '#d1fae5',
   },
   icon: {
     fontSize: 15,

@@ -13,7 +13,7 @@ export default function AppointmentCard({ appointment, role = 'DELEGUE', onAnnul
   const getStatusStyles = (status) => {
     switch (status) {
       case 'Confirmé':
-        return { bg: '#dcfce7', text: '#15803d' };
+        return { bg: '#d1fae5', text: '#047857' };
       case 'Effectué':
         return { bg: '#f1f5f9', text: '#475569' };
       case 'Annulé':
@@ -135,7 +135,7 @@ const styles = StyleSheet.create({
   docSpecialty: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#16a34a',
+    color: '#059669',
     marginTop: 2,
     marginBottom: 6,
   },
@@ -174,10 +174,10 @@ const styles = StyleSheet.create({
     color: '#475569',
   },
   actionButtonRealise: {
-    backgroundColor: '#dcfce7',
+    backgroundColor: '#d1fae5',
   },
   actionButtonRealiseText: {
-    color: '#15803d',
+    color: '#047857',
   },
   actionButtonAbsent: {
     backgroundColor: '#fef3c7',

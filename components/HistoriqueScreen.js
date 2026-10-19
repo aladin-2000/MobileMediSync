@@ -77,7 +77,7 @@ export default function HistoriqueScreen({ role = 'DELEGUE' }) {
 
       {loading ? (
         <View style={styles.centered}>
-          <ActivityIndicator size="small" color="#16a34a" />
+          <ActivityIndicator size="small" color="#059669" />
         </View>
       ) : (
         <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -135,7 +135,7 @@ const styles = StyleSheet.create({
   refreshButton: { marginLeft: 4 },
   weekLabel: { fontSize: 14, fontWeight: '700', color: '#0f172a' },
   todayButton: { alignSelf: 'center', marginTop: 8 },
-  todayButtonText: { fontSize: 12, fontWeight: '700', color: '#16a34a' },
+  todayButtonText: { fontSize: 12, fontWeight: '700', color: '#059669' },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   scrollContent: { paddingVertical: 16, paddingBottom: 32 },
   statsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, paddingHorizontal: 16, marginBottom: 8 },

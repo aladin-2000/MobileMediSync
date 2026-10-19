@@ -51,7 +51,7 @@ export default function VerifierEmailScreen() {
     return (
       <View style={styles.screen}>
         <View style={styles.center}>
-          <ActivityIndicator size="large" color="#16a34a" />
+          <ActivityIndicator size="large" color="#059669" />
           <Text style={styles.title}>Vérification en cours...</Text>
         </View>
       </View>
@@ -126,8 +126,8 @@ const styles = StyleSheet.create({
   title: { fontSize: 19, fontWeight: '800', color: '#0f172a', marginTop: 8, marginBottom: 10, textAlign: 'center' },
   text: { fontSize: 14, color: '#64748b', textAlign: 'center', lineHeight: 21, marginBottom: 20 },
   button: {
-    backgroundColor: '#16a34a', borderRadius: 14, paddingVertical: 15, alignItems: 'center', width: '100%',
-    shadowColor: '#16a34a', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.35, shadowRadius: 12, elevation: 4,
+    backgroundColor: '#059669', borderRadius: 14, paddingVertical: 15, alignItems: 'center', width: '100%',
+    shadowColor: '#059669', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.35, shadowRadius: 12, elevation: 4,
   },
   buttonText: { color: '#ffffff', fontWeight: '700', fontSize: 15 },
   resendForm: { width: '100%' },
@@ -139,7 +139,7 @@ const styles = StyleSheet.create({
   infoBanner: {
     backgroundColor: '#ecfdf5', borderWidth: 1, borderColor: '#bbf7d0', borderRadius: 12, padding: 12, width: '100%',
   },
-  infoBannerText: { fontSize: 13, color: '#15803d', textAlign: 'center' },
+  infoBannerText: { fontSize: 13, color: '#047857', textAlign: 'center' },
   backLink: { marginTop: 18 },
   backLinkText: { fontSize: 13, color: '#64748b', fontWeight: '600' },
 });

@@ -174,7 +174,7 @@ const styles = StyleSheet.create({
     elevation: 10,
   },
   header: {
-    backgroundColor: '#16a34a',
+    backgroundColor: '#059669',
     paddingTop: Platform.select({ ios: 64, android: 44, default: 32 }),
     paddingBottom: 24,
     paddingHorizontal: 20,
@@ -230,7 +230,7 @@ const styles = StyleSheet.create({
     width: 34,
     height: 34,
     borderRadius: 17,
-    backgroundColor: '#f0fdf4',
+    backgroundColor: '#ecfdf5',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
