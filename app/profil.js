@@ -130,59 +130,61 @@ export default function ProfilScreen() {
       <ScrollView style={styles.container} contentContainerStyle={styles.editContent}>
         <Stack.Screen options={{ title: 'Modifier mon profil' }} />
 
-        <View style={styles.fieldGroup}>
-          <Text style={styles.label}>Nom</Text>
-          <TextInput style={styles.input} value={form.nom} onChangeText={(v) => setForm((f) => ({ ...f, nom: v }))} />
-        </View>
-        <View style={styles.fieldGroup}>
-          <Text style={styles.label}>Prénom</Text>
-          <TextInput style={styles.input} value={form.prenom} onChangeText={(v) => setForm((f) => ({ ...f, prenom: v }))} />
-        </View>
+        <View style={styles.editFields}>
+          <View style={styles.fieldGroup}>
+            <Text style={styles.label}>Nom</Text>
+            <TextInput style={styles.input} value={form.nom} onChangeText={(v) => setForm((f) => ({ ...f, nom: v }))} />
+          </View>
+          <View style={styles.fieldGroup}>
+            <Text style={styles.label}>Prénom</Text>
+            <TextInput style={styles.input} value={form.prenom} onChangeText={(v) => setForm((f) => ({ ...f, prenom: v }))} />
+          </View>
 
-        {user.role === 'MEDECIN' && (
-          <>
-            <View style={styles.fieldGroup}>
-              <Text style={styles.label}>Spécialité</Text>
-              <TouchableOpacity
-                style={styles.selectField}
-                onPress={() => setSpecialitePickerVisible(true)}
-                activeOpacity={0.7}
-              >
-                <Text style={form.specialite ? styles.selectFieldValue : styles.selectFieldPlaceholder}>
-                  {form.specialite ? specialiteLibelle(form.specialite) : 'Choisir une spécialité'}
-                </Text>
-                <Text style={styles.selectFieldChevron}>▾</Text>
-              </TouchableOpacity>
-            </View>
-            <View style={styles.fieldGroup}>
-              <Text style={styles.label}>Adresse du cabinet</Text>
-              <TextInput
-                style={styles.input} value={form.adresseCabinet}
-                onChangeText={(v) => setForm((f) => ({ ...f, adresseCabinet: v }))}
-              />
-            </View>
-            <View style={styles.fieldGroup}>
-              <Text style={styles.label}>Région</Text>
-              <TouchableOpacity
-                style={styles.selectField}
-                onPress={() => setRegionPickerVisible(true)}
-                activeOpacity={0.7}
-              >
-                <Text style={form.regionId ? styles.selectFieldValue : styles.selectFieldPlaceholder}>
-                  {form.regionId ? regionLibelle(form.regionId) : 'Choisir une région'}
-                </Text>
-                <Text style={styles.selectFieldChevron}>▾</Text>
-              </TouchableOpacity>
-            </View>
-          </>
-        )}
+          {user.role === 'MEDECIN' && (
+            <>
+              <View style={styles.fieldGroup}>
+                <Text style={styles.label}>Spécialité</Text>
+                <TouchableOpacity
+                  style={styles.selectField}
+                  onPress={() => setSpecialitePickerVisible(true)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={form.specialite ? styles.selectFieldValue : styles.selectFieldPlaceholder}>
+                    {form.specialite ? specialiteLibelle(form.specialite) : 'Choisir une spécialité'}
+                  </Text>
+                  <Text style={styles.selectFieldChevron}>▾</Text>
+                </TouchableOpacity>
+              </View>
+              <View style={styles.fieldGroup}>
+                <Text style={styles.label}>Adresse du cabinet</Text>
+                <TextInput
+                  style={styles.input} value={form.adresseCabinet}
+                  onChangeText={(v) => setForm((f) => ({ ...f, adresseCabinet: v }))}
+                />
+              </View>
+              <View style={styles.fieldGroup}>
+                <Text style={styles.label}>Région</Text>
+                <TouchableOpacity
+                  style={styles.selectField}
+                  onPress={() => setRegionPickerVisible(true)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={form.regionId ? styles.selectFieldValue : styles.selectFieldPlaceholder}>
+                    {form.regionId ? regionLibelle(form.regionId) : 'Choisir une région'}
+                  </Text>
+                  <Text style={styles.selectFieldChevron}>▾</Text>
+                </TouchableOpacity>
+              </View>
+            </>
+          )}
 
-        <View style={styles.fieldGroup}>
-          <Text style={styles.label}>Téléphone</Text>
-          <TextInput
-            style={styles.input} value={form.telephone} keyboardType="phone-pad"
-            onChangeText={(v) => setForm((f) => ({ ...f, telephone: v }))}
-          />
+          <View style={styles.fieldGroup}>
+            <Text style={styles.label}>Téléphone</Text>
+            <TextInput
+              style={styles.input} value={form.telephone} keyboardType="phone-pad"
+              onChangeText={(v) => setForm((f) => ({ ...f, telephone: v }))}
+            />
+          </View>
         </View>
 
         <View style={styles.editActions}>
@@ -300,7 +302,7 @@ export default function ProfilScreen() {
       ) : null}
 
       {loading ? (
-        <ActivityIndicator size="large" color="#16a34a" style={styles.loading} />
+        <ActivityIndicator size="large" color="#059669" style={styles.loading} />
       ) : (
         <View style={styles.card}>
           <InfoRow label="Email" value={user?.email} />
@@ -358,8 +360,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   editContent: {
+    flexGrow: 1,
+    justifyContent: 'space-between',
     padding: 24,
     paddingTop: 32,
+    paddingBottom: 32,
+  },
+  editFields: {
+    flex: 1,
   },
   avatarWrapper: {
     marginBottom: 16,
@@ -373,7 +381,7 @@ const styles = StyleSheet.create({
     width: 96,
     height: 96,
     borderRadius: 48,
-    backgroundColor: '#16a34a',
+    backgroundColor: '#059669',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -389,18 +397,18 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   roleBadge: {
-    backgroundColor: '#f0fdf4',
+    backgroundColor: '#ecfdf5',
     borderRadius: 20,
     paddingHorizontal: 12,
     paddingVertical: 5,
     marginTop: 8,
     borderWidth: 1,
-    borderColor: '#dcfce7',
+    borderColor: '#d1fae5',
   },
   roleBadgeText: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#166534',
+    color: '#065f46',
   },
   pendingBanner: {
     backgroundColor: '#fffbeb',
@@ -463,7 +471,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
     backgroundColor: '#ffffff',
     borderWidth: 1.5,
-    borderColor: '#16a34a',
+    borderColor: '#059669',
     borderRadius: 14,
     paddingVertical: 12,
     paddingHorizontal: 24,
@@ -471,7 +479,7 @@ const styles = StyleSheet.create({
   editButtonText: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#16a34a',
+    color: '#059669',
   },
   fieldGroup: { marginBottom: 16 },
   label: { fontSize: 12, fontWeight: '700', color: '#475569', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.4 },
@@ -503,15 +511,15 @@ const styles = StyleSheet.create({
     paddingVertical: 13, paddingHorizontal: 12, borderBottomWidth: 1, borderBottomColor: '#f1f5f9',
   },
   pickerRowText: { fontSize: 14, color: '#334155', fontWeight: '600' },
-  pickerRowTextActive: { color: '#15803d', fontWeight: '800' },
-  pickerRowCheck: { fontSize: 14, color: '#15803d', fontWeight: '800' },
-  editActions: { flexDirection: 'row', gap: 10, marginTop: 8 },
+  pickerRowTextActive: { color: '#047857', fontWeight: '800' },
+  pickerRowCheck: { fontSize: 14, color: '#047857', fontWeight: '800' },
+  editActions: { flexDirection: 'row', gap: 10, marginTop: 32, paddingTop: 16 },
   cancelButton: {
     flex: 1, backgroundColor: '#f1f5f9', borderRadius: 14, paddingVertical: 14, alignItems: 'center',
   },
   cancelButtonText: { fontSize: 14, fontWeight: '700', color: '#475569' },
   saveButton: {
-    flex: 1, backgroundColor: '#16a34a', borderRadius: 14, paddingVertical: 14, alignItems: 'center',
+    flex: 1, backgroundColor: '#059669', borderRadius: 14, paddingVertical: 14, alignItems: 'center',
   },
   saveButtonText: { fontSize: 14, fontWeight: '700', color: '#ffffff' },
 });

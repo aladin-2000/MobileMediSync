@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, TextInput, TouchableOpacity, ActivityIndicator,
-  KeyboardAvoidingView, ScrollView, Platform,
+  KeyboardAvoidingView, ScrollView, Platform, Modal,
 } from 'react-native';
 import { router } from 'expo-router';
 import { getSpecialites, getRegions, inscrireMedecin } from '../services/api';
@@ -21,6 +21,8 @@ export default function InscriptionMedecinScreen() {
 
   const [specialites, setSpecialites] = useState([]);
   const [regions, setRegions] = useState([]);
+  const [specialitePickerVisible, setSpecialitePickerVisible] = useState(false);
+  const [regionPickerVisible, setRegionPickerVisible] = useState(false);
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
   const { confirm, notify, modal } = useConfirmModal();
@@ -33,8 +35,11 @@ export default function InscriptionMedecinScreen() {
     getRegions().then(setRegions).catch(() => {});
   }, []);
 
+  const specialiteLibelle = (valeur) => specialites.find((s) => s.valeur === valeur)?.libelle ?? valeur;
+  const regionLibelle = (valeur) => regions.find((r) => r.valeur === valeur)?.libelle ?? valeur;
+
   const handleSubmit = async () => {
-    if (!nom || !prenom || !email || !password || !specialite || !adresseCabinet || !regionId) {
+    if (!nom || !prenom || !email || !password || !specialite || !adresseCabinet || !regionId || !telephone) {
       notify({ title: 'Champs manquants', message: 'Merci de remplir tous les champs obligatoires.', variant: 'warning' });
       return;
     }
@@ -60,7 +65,7 @@ export default function InscriptionMedecinScreen() {
     try {
       await inscrireMedecin({
         email, password, nom, prenom, specialite, adresseCabinet, regionId,
-        telephone: telephone || undefined,
+        telephone,
       });
       setDone(true);
     } catch (error) {
@@ -138,20 +143,16 @@ export default function InscriptionMedecinScreen() {
 
           <View style={styles.fieldGroup}>
             <Text style={styles.label}>Spécialité</Text>
-            <View style={styles.chipsWrap}>
-              {specialites.map((opt) => (
-                <TouchableOpacity
-                  key={opt.valeur}
-                  style={[styles.chip, specialite === opt.valeur && styles.chipActive]}
-                  onPress={() => setSpecialite(opt.valeur)}
-                  activeOpacity={0.7}
-                >
-                  <Text style={[styles.chipText, specialite === opt.valeur && styles.chipTextActive]}>
-                    {opt.libelle}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
+            <TouchableOpacity
+              style={styles.selectField}
+              onPress={() => setSpecialitePickerVisible(true)}
+              activeOpacity={0.7}
+            >
+              <Text style={specialite ? styles.selectFieldValue : styles.selectFieldPlaceholder}>
+                {specialite ? specialiteLibelle(specialite) : 'Choisir une spécialité'}
+              </Text>
+              <Text style={styles.selectFieldChevron}>▾</Text>
+            </TouchableOpacity>
           </View>
 
           <View style={styles.fieldGroup}>
@@ -161,24 +162,20 @@ export default function InscriptionMedecinScreen() {
 
           <View style={styles.fieldGroup}>
             <Text style={styles.label}>Région</Text>
-            <View style={styles.chipsWrap}>
-              {regions.map((opt) => (
-                <TouchableOpacity
-                  key={opt.valeur}
-                  style={[styles.chip, regionId === opt.valeur && styles.chipActive]}
-                  onPress={() => setRegionId(opt.valeur)}
-                  activeOpacity={0.7}
-                >
-                  <Text style={[styles.chipText, regionId === opt.valeur && styles.chipTextActive]}>
-                    {opt.libelle}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
+            <TouchableOpacity
+              style={styles.selectField}
+              onPress={() => setRegionPickerVisible(true)}
+              activeOpacity={0.7}
+            >
+              <Text style={regionId ? styles.selectFieldValue : styles.selectFieldPlaceholder}>
+                {regionId ? regionLibelle(regionId) : 'Choisir une région'}
+              </Text>
+              <Text style={styles.selectFieldChevron}>▾</Text>
+            </TouchableOpacity>
           </View>
 
           <View style={styles.fieldGroup}>
-            <Text style={styles.label}>Téléphone (optionnel)</Text>
+            <Text style={styles.label}>Téléphone</Text>
             <TextInput style={styles.input} value={telephone} onChangeText={setTelephone} keyboardType="phone-pad" placeholder="+216 .." />
           </View>
 
@@ -203,6 +200,76 @@ export default function InscriptionMedecinScreen() {
         </ScrollView>
       </KeyboardAvoidingView>
 
+      <Modal
+        visible={specialitePickerVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setSpecialitePickerVisible(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalBackdrop}
+          activeOpacity={1}
+          onPress={() => setSpecialitePickerVisible(false)}
+        >
+          <TouchableOpacity activeOpacity={1} onPress={() => {}} style={styles.pickerCard}>
+            <Text style={styles.pickerTitle}>Choisir une spécialité</Text>
+            <ScrollView style={styles.pickerList}>
+              {specialites.map((opt) => (
+                <TouchableOpacity
+                  key={opt.valeur}
+                  style={styles.pickerRow}
+                  onPress={() => {
+                    setSpecialite(opt.valeur);
+                    setSpecialitePickerVisible(false);
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[styles.pickerRowText, specialite === opt.valeur && styles.pickerRowTextActive]}>
+                    {opt.libelle}
+                  </Text>
+                  {specialite === opt.valeur && <Text style={styles.pickerRowCheck}>✓</Text>}
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
+
+      <Modal
+        visible={regionPickerVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setRegionPickerVisible(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalBackdrop}
+          activeOpacity={1}
+          onPress={() => setRegionPickerVisible(false)}
+        >
+          <TouchableOpacity activeOpacity={1} onPress={() => {}} style={styles.pickerCard}>
+            <Text style={styles.pickerTitle}>Choisir une région</Text>
+            <ScrollView style={styles.pickerList}>
+              {regions.map((opt) => (
+                <TouchableOpacity
+                  key={opt.valeur}
+                  style={styles.pickerRow}
+                  onPress={() => {
+                    setRegionId(opt.valeur);
+                    setRegionPickerVisible(false);
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[styles.pickerRowText, regionId === opt.valeur && styles.pickerRowTextActive]}>
+                    {opt.libelle}
+                  </Text>
+                  {regionId === opt.valeur && <Text style={styles.pickerRowCheck}>✓</Text>}
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
+
       {modal}
     </View>
   );
@@ -222,22 +289,40 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff', borderWidth: 1.5, borderColor: '#e2e8f0', borderRadius: 14,
     paddingHorizontal: 14, paddingVertical: 13, fontSize: 15, color: '#0f172a',
   },
-  chipsWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  chip: {
-    paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20,
-    backgroundColor: '#ffffff', borderWidth: 1.5, borderColor: '#e2e8f0',
+  selectField: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    backgroundColor: '#ffffff', borderWidth: 1.5, borderColor: '#e2e8f0', borderRadius: 14,
+    paddingHorizontal: 14, paddingVertical: 13,
   },
-  chipActive: { backgroundColor: '#f0fdf4', borderColor: '#16a34a' },
-  chipText: { fontSize: 12, fontWeight: '600', color: '#475569' },
-  chipTextActive: { color: '#15803d' },
+  selectFieldValue: { fontSize: 15, color: '#0f172a', fontWeight: '600' },
+  selectFieldPlaceholder: { fontSize: 15, color: '#94a3b8' },
+  selectFieldChevron: { fontSize: 14, color: '#94a3b8' },
+  modalBackdrop: {
+    flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.5)', justifyContent: 'center', alignItems: 'center',
+  },
+  pickerCard: {
+    backgroundColor: '#ffffff', borderRadius: 16, paddingVertical: 16, marginHorizontal: 24,
+    width: '85%', maxHeight: '70%',
+  },
+  pickerTitle: {
+    fontSize: 15, fontWeight: '800', color: '#0f172a', textAlign: 'center', marginBottom: 8, paddingHorizontal: 16,
+  },
+  pickerList: { paddingHorizontal: 8 },
+  pickerRow: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingVertical: 13, paddingHorizontal: 12, borderBottomWidth: 1, borderBottomColor: '#f1f5f9',
+  },
+  pickerRowText: { fontSize: 14, color: '#334155', fontWeight: '600' },
+  pickerRowTextActive: { color: '#047857', fontWeight: '800' },
+  pickerRowCheck: { fontSize: 14, color: '#047857', fontWeight: '800' },
   infoBanner: {
-    backgroundColor: '#f0fdf4', borderWidth: 1, borderColor: '#dcfce7', borderRadius: 12,
+    backgroundColor: '#ecfdf5', borderWidth: 1, borderColor: '#d1fae5', borderRadius: 12,
     padding: 12, marginBottom: 18,
   },
-  infoBannerText: { fontSize: 12, color: '#166534', lineHeight: 17 },
+  infoBannerText: { fontSize: 12, color: '#065f46', lineHeight: 17 },
   button: {
-    backgroundColor: '#16a34a', borderRadius: 14, paddingVertical: 15, alignItems: 'center',
-    shadowColor: '#16a34a', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.35, shadowRadius: 12, elevation: 4,
+    backgroundColor: '#059669', borderRadius: 14, paddingVertical: 15, alignItems: 'center',
+    shadowColor: '#059669', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.35, shadowRadius: 12, elevation: 4,
   },
   buttonDisabled: { opacity: 0.7 },
   buttonText: { color: '#ffffff', fontWeight: '700', fontSize: 15 },

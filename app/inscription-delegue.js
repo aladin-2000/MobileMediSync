@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, TextInput, TouchableOpacity, ActivityIndicator,
-  KeyboardAvoidingView, ScrollView, Platform,
+  KeyboardAvoidingView, ScrollView, Platform, Modal,
 } from 'react-native';
 import { router } from 'expo-router';
 import { getLaboratoires, inscrireDelegue } from '../services/api';
@@ -20,6 +20,7 @@ export default function InscriptionDelegueScreen() {
   const [telephone, setTelephone] = useState('');
 
   const [laboratoires, setLaboratoires] = useState([]);
+  const [laboPickerVisible, setLaboPickerVisible] = useState(false);
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
   const { confirm, notify, modal } = useConfirmModal();
@@ -30,8 +31,10 @@ export default function InscriptionDelegueScreen() {
       .catch(() => {});
   }, []);
 
+  const laboLibelle = (id) => laboratoires.find((l) => l.id === id)?.nom ?? id;
+
   const handleSubmit = async () => {
-    if (!nom || !prenom || !email || !password) {
+    if (!nom || !prenom || !email || !password || !telephone) {
       notify({ title: 'Champs manquants', message: 'Merci de remplir tous les champs obligatoires.', variant: 'warning' });
       return;
     }
@@ -63,7 +66,7 @@ export default function InscriptionDelegueScreen() {
         email, password, nom, prenom,
         laboratoireId: laboInconnu ? undefined : laboratoireId,
         laboName: laboInconnu ? laboName : undefined,
-        telephone: telephone || undefined,
+        telephone,
       });
       setDone(true);
     } catch (error) {
@@ -141,21 +144,16 @@ export default function InscriptionDelegueScreen() {
           <View style={styles.fieldGroup}>
             <Text style={styles.label}>Laboratoire</Text>
             {!laboInconnu ? (
-              <View style={styles.laboList}>
-                {laboratoires.map((labo) => (
-                  <TouchableOpacity
-                    key={labo.id}
-                    style={[styles.laboRow, laboratoireId === labo.id && styles.laboRowActive]}
-                    onPress={() => setLaboratoireId(labo.id)}
-                    activeOpacity={0.7}
-                  >
-                    <Text style={[styles.laboRowText, laboratoireId === labo.id && styles.laboRowTextActive]}>
-                      {labo.nom}
-                    </Text>
-                    {laboratoireId === labo.id && <Text style={styles.laboCheck}>✓</Text>}
-                  </TouchableOpacity>
-                ))}
-              </View>
+              <TouchableOpacity
+                style={styles.selectField}
+                onPress={() => setLaboPickerVisible(true)}
+                activeOpacity={0.7}
+              >
+                <Text style={laboratoireId ? styles.selectFieldValue : styles.selectFieldPlaceholder}>
+                  {laboratoireId ? laboLibelle(laboratoireId) : 'Choisir un laboratoire'}
+                </Text>
+                <Text style={styles.selectFieldChevron}>▾</Text>
+              </TouchableOpacity>
             ) : (
               <TextInput
                 style={styles.input} value={laboName} onChangeText={setLaboName}
@@ -175,7 +173,7 @@ export default function InscriptionDelegueScreen() {
           </View>
 
           <View style={styles.fieldGroup}>
-            <Text style={styles.label}>Téléphone (optionnel)</Text>
+            <Text style={styles.label}>Téléphone</Text>
             <TextInput style={styles.input} value={telephone} onChangeText={setTelephone} keyboardType="phone-pad" placeholder="+216 .." />
           </View>
 
@@ -193,6 +191,41 @@ export default function InscriptionDelegueScreen() {
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      <Modal
+        visible={laboPickerVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setLaboPickerVisible(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalBackdrop}
+          activeOpacity={1}
+          onPress={() => setLaboPickerVisible(false)}
+        >
+          <TouchableOpacity activeOpacity={1} onPress={() => {}} style={styles.pickerCard}>
+            <Text style={styles.pickerTitle}>Choisir un laboratoire</Text>
+            <ScrollView style={styles.pickerList}>
+              {laboratoires.map((labo) => (
+                <TouchableOpacity
+                  key={labo.id}
+                  style={styles.pickerRow}
+                  onPress={() => {
+                    setLaboratoireId(labo.id);
+                    setLaboPickerVisible(false);
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[styles.pickerRowText, laboratoireId === labo.id && styles.pickerRowTextActive]}>
+                    {labo.nom}
+                  </Text>
+                  {laboratoireId === labo.id && <Text style={styles.pickerRowCheck}>✓</Text>}
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
 
       {modal}
     </View>
@@ -213,29 +246,43 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff', borderWidth: 1.5, borderColor: '#e2e8f0', borderRadius: 14,
     paddingHorizontal: 14, paddingVertical: 13, fontSize: 15, color: '#0f172a',
   },
-  laboList: {
-    borderWidth: 1.5, borderColor: '#e2e8f0', borderRadius: 14, backgroundColor: '#ffffff',
-    maxHeight: 220, overflow: 'hidden',
-  },
-  laboRow: {
+  selectField: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 14, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#f1f5f9',
+    backgroundColor: '#ffffff', borderWidth: 1.5, borderColor: '#e2e8f0', borderRadius: 14,
+    paddingHorizontal: 14, paddingVertical: 13,
   },
-  laboRowActive: { backgroundColor: '#f0fdf4' },
-  laboRowText: { fontSize: 14, color: '#334155', fontWeight: '500' },
-  laboRowTextActive: { color: '#166534', fontWeight: '700' },
-  laboCheck: { color: '#16a34a', fontWeight: '800' },
+  selectFieldValue: { fontSize: 15, color: '#0f172a', fontWeight: '600' },
+  selectFieldPlaceholder: { fontSize: 15, color: '#94a3b8' },
+  selectFieldChevron: { fontSize: 14, color: '#94a3b8' },
+  modalBackdrop: {
+    flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.5)', justifyContent: 'center', alignItems: 'center',
+  },
+  pickerCard: {
+    backgroundColor: '#ffffff', borderRadius: 16, paddingVertical: 16, marginHorizontal: 24,
+    width: '85%', maxHeight: '70%',
+  },
+  pickerTitle: {
+    fontSize: 15, fontWeight: '800', color: '#0f172a', textAlign: 'center', marginBottom: 8, paddingHorizontal: 16,
+  },
+  pickerList: { paddingHorizontal: 8 },
+  pickerRow: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingVertical: 13, paddingHorizontal: 12, borderBottomWidth: 1, borderBottomColor: '#f1f5f9',
+  },
+  pickerRowText: { fontSize: 14, color: '#334155', fontWeight: '600' },
+  pickerRowTextActive: { color: '#047857', fontWeight: '800' },
+  pickerRowCheck: { fontSize: 14, color: '#047857', fontWeight: '800' },
   checkboxRow: { flexDirection: 'row', alignItems: 'center', marginTop: 10, gap: 8 },
   checkbox: {
     width: 18, height: 18, borderRadius: 5, borderWidth: 1.5, borderColor: '#cbd5e1',
     alignItems: 'center', justifyContent: 'center', backgroundColor: '#ffffff',
   },
-  checkboxChecked: { backgroundColor: '#16a34a', borderColor: '#16a34a' },
+  checkboxChecked: { backgroundColor: '#059669', borderColor: '#059669' },
   checkboxMark: { color: '#ffffff', fontSize: 12, fontWeight: '800' },
   checkboxLabel: { fontSize: 12.5, color: '#64748b', fontWeight: '500', flex: 1 },
   button: {
-    backgroundColor: '#16a34a', borderRadius: 14, paddingVertical: 15, alignItems: 'center',
-    shadowColor: '#16a34a', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.35, shadowRadius: 12, elevation: 4,
+    backgroundColor: '#059669', borderRadius: 14, paddingVertical: 15, alignItems: 'center',
+    shadowColor: '#059669', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.35, shadowRadius: 12, elevation: 4,
   },
   buttonDisabled: { opacity: 0.7 },
   buttonText: { color: '#ffffff', fontWeight: '700', fontSize: 15 },
