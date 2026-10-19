@@ -9,7 +9,7 @@ const MONTHS_FR = [
 
 const WEEKDAYS_FR = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
 
-export default function CustomCalendar({ appointments = [], onMonthChange, onDaySelect, selectedDate }) {
+export default function CustomCalendar({ appointments = [], onMonthChange, onDaySelect, selectedDate, disableWeekends = false }) {
   const [currentDate, setCurrentDate] = useState(new Date());
 
   const year = currentDate.getFullYear();
@@ -104,16 +104,19 @@ export default function CustomCalendar({ appointments = [], onMonthChange, onDay
           const isSelected = selectedDate === formattedDate;
           const count = formattedDate ? (appointmentsCount[formattedDate] || 0) : 0;
           const today = isToday(day);
+          const colIndex = idx % 7;
+          const isWeekend = disableWeekends && day && (colIndex === 5 || colIndex === 6);
 
           return (
             <TouchableOpacity
               key={id}
               style={[
                 styles.cell,
-                isSelected && styles.cellSelected,
-                today && !isSelected && styles.cellToday
+                isSelected && !isWeekend && styles.cellSelected,
+                today && !isSelected && styles.cellToday,
+                isWeekend && styles.cellWeekend,
               ]}
-              disabled={!day}
+              disabled={!day || isWeekend}
               onPress={() => handleDayPress(day)}
               activeOpacity={0.7}
             >
@@ -121,8 +124,9 @@ export default function CustomCalendar({ appointments = [], onMonthChange, onDay
                 <>
                   <Text style={[
                     styles.dayText,
-                    isSelected && styles.dayTextSelected,
-                    today && !isSelected && styles.dayTextToday
+                    isSelected && !isWeekend && styles.dayTextSelected,
+                    today && !isSelected && styles.dayTextToday,
+                    isWeekend && styles.dayTextWeekend,
                   ]}>
                     {day}
                   </Text>
@@ -212,12 +216,18 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   cellSelected: {
-    backgroundColor: '#16a34a',
+    backgroundColor: '#059669',
   },
   cellToday: {
     borderWidth: 1.5,
     borderColor: '#cbd5e1',
     backgroundColor: '#f8fafc',
+  },
+  cellWeekend: {
+    opacity: 0.35,
+  },
+  dayTextWeekend: {
+    color: '#94a3b8',
   },
   dayText: {
     fontSize: 14,
