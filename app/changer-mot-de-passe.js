@@ -2,12 +2,14 @@
 import {                useState } from "react";
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, ActivityIndicator } from "react-native";
 import { router } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "../context/AuthContext";
 import * as authService from "../services/authService";
 import useConfirmModal from "../hooks/useConfirmModal";
 
 export default function ChangerMotDePasseScreen() {
   const { user, markPasswordChanged } = useAuth();
+  const insets = useSafeAreaInsets();
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -28,7 +30,7 @@ export default function ChangerMotDePasseScreen() {
       await authService.changerMotDePasse(currentPassword, newPassword);
       markPasswordChanged();
       if (user.role === "MEDECIN") router.replace("/medecin");
-      else if (user.role === "DELEGUE") router.replace("/delegue");
+      else if (user.role === "DELEGUE") router.replace("/delegue/home");
       else if (user.role === "ADMIN") router.replace("/admin");
     } catch (error) {
       notify({ title: "Erreur", message: error.message, variant: "error" });
@@ -38,7 +40,7 @@ export default function ChangerMotDePasseScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingBottom: insets.bottom }]}>
       <View style={styles.form}>
         <Text style={styles.title}>Changement de mot de passe requis</Text>
         <Text style={styles.subtitle}>Choisissez un nouveau mot de passe avant de continuer.</Text>

@@ -3,6 +3,7 @@ import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import { getMesNotifications, marquerNotificationLue, marquerToutesNotificationsLues, iconeNotification } from '../services/api';
+import { useNotifications } from '../context/NotificationContext';
 import RefreshButton from './RefreshButton';
 
 function formatDate(dateStr) {
@@ -23,6 +24,7 @@ export default function NotificationsScreen() {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const { refresh: refreshBadge } = useNotifications();
 
   const load = useCallback(async () => {
     try {
@@ -52,6 +54,7 @@ export default function NotificationsScreen() {
     setNotifications((list) => list.map((n) => (n.id === notif.id ? { ...n, isRead: true } : n)));
     try {
       await marquerNotificationLue(notif.id);
+      refreshBadge();
     } catch (error) {
       console.error('Error marking notification read:', error);
     }
@@ -61,6 +64,7 @@ export default function NotificationsScreen() {
     setNotifications((list) => list.map((n) => ({ ...n, isRead: true })));
     try {
       await marquerToutesNotificationsLues();
+      refreshBadge();
     } catch (error) {
       console.error('Error marking all notifications read:', error);
     }

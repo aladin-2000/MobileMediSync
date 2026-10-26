@@ -11,11 +11,13 @@ import {
   Platform,
 } from "react-native";
 import { router } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "../context/AuthContext";
 import useConfirmModal from "../hooks/useConfirmModal";
 
 export default function Index() {
   const { login } = useAuth();
+  const insets = useSafeAreaInsets();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -31,7 +33,7 @@ export default function Index() {
       } else if (user.role === "MEDECIN") {
         router.replace("/medecin");
       } else if (user.role === "DELEGUE") {
-        router.replace("/delegue");
+        router.replace("/delegue/home");
       } else if (user.role === "ADMIN") {
         router.replace("/admin");
       }
@@ -62,7 +64,7 @@ export default function Index() {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
         <ScrollView
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={[styles.scrollContent, { paddingBottom: 40 + insets.bottom }]}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >

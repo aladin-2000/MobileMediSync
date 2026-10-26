@@ -1,6 +1,7 @@
 // app/profil.js
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, Image, ScrollView, TextInput, TouchableOpacity, Modal } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Stack } from 'expo-router';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -19,6 +20,7 @@ const ROLE_LABELS = {
 
 export default function ProfilScreen() {
   const { user } = useAuth();
+  const insets = useSafeAreaInsets();
   const [profil, setProfil] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -127,7 +129,7 @@ export default function ProfilScreen() {
 
   if (editing) {
     return (
-      <ScrollView style={styles.container} contentContainerStyle={styles.editContent}>
+      <ScrollView style={styles.container} contentContainerStyle={[styles.editContent, { paddingBottom: 32 + insets.bottom }]}>
         <Stack.Screen options={{ title: 'Modifier mon profil' }} />
 
         <View style={styles.editFields}>
@@ -272,7 +274,7 @@ export default function ProfilScreen() {
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView style={styles.container} contentContainerStyle={[styles.content, { paddingBottom: 32 + insets.bottom }]}>
       <Stack.Screen options={{ title: 'Mon profil' }} />
 
       <View style={styles.avatarWrapper}>

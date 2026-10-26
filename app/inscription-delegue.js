@@ -5,10 +5,12 @@ import {
   KeyboardAvoidingView, ScrollView, Platform, Modal,
 } from 'react-native';
 import { router } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getLaboratoires, inscrireDelegue } from '../services/api';
 import useConfirmModal from '../hooks/useConfirmModal';
 
 export default function InscriptionDelegueScreen() {
+  const insets = useSafeAreaInsets();
   const [nom, setNom] = useState('');
   const [prenom, setPrenom] = useState('');
   const [email, setEmail] = useState('');
@@ -64,8 +66,7 @@ export default function InscriptionDelegueScreen() {
     try {
       await inscrireDelegue({
         email, password, nom, prenom,
-        laboratoireId: laboInconnu ? undefined : laboratoireId,
-        laboName: laboInconnu ? laboName : undefined,
+        laboName: laboInconnu ? laboName : laboLibelle(laboratoireId),
         telephone,
       });
       setDone(true);
@@ -81,13 +82,12 @@ export default function InscriptionDelegueScreen() {
       <View style={styles.screen}>
         <View style={styles.successWrapper}>
           <View style={styles.successIcon}>
-            <Text style={styles.successEmoji}>📧</Text>
+            <Text style={styles.successEmoji}>⏳</Text>
           </View>
-          <Text style={styles.successTitle}>Vérifiez votre boîte email</Text>
+          <Text style={styles.successTitle}>Merci de vous être inscrit à notre plateforme</Text>
           <Text style={styles.successText}>
-            Un lien de vérification a été envoyé à {'\n'}
-            <Text style={styles.successEmail}>{email}</Text>.{'\n\n'}
-            Cliquez dessus pour activer votre compte et vous connecter.
+            Votre compte a été créé avec succès.{'\n\n'}
+            Veuillez attendre qu'un administrateur active votre compte avant de pouvoir vous connecter.
           </Text>
           <TouchableOpacity style={styles.button} onPress={() => router.replace('/')} activeOpacity={0.85}>
             <Text style={styles.buttonText}>Retour à la connexion</Text>
@@ -100,7 +100,7 @@ export default function InscriptionDelegueScreen() {
   return (
     <View style={styles.screen}>
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-        <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+        <ScrollView contentContainerStyle={[styles.scrollContent, { paddingBottom: 40 + insets.bottom }]} keyboardShouldPersistTaps="handled">
           <Text style={styles.title}>Créer un compte délégué</Text>
           <Text style={styles.subtitle}>Renseignez vos informations pour rejoindre MediSync</Text>
 
@@ -168,7 +168,7 @@ export default function InscriptionDelegueScreen() {
               <View style={[styles.checkbox, laboInconnu && styles.checkboxChecked]}>
                 {laboInconnu && <Text style={styles.checkboxMark}>✓</Text>}
               </View>
-              <Text style={styles.checkboxLabel}>Mon laboratoire n'est pas encore inscrit sur MediSync</Text>
+              <Text style={styles.checkboxLabel}>Mon laboratoire n'existe pas</Text>
             </TouchableOpacity>
           </View>
 

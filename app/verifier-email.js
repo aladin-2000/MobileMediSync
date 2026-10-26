@@ -2,10 +2,12 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { verifierEmail, renvoyerVerification } from '../services/api';
 
 export default function VerifierEmailScreen() {
   const { token } = useLocalSearchParams();
+  const insets = useSafeAreaInsets();
   const [state, setState] = useState('loading'); // loading | success | error | missing
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -49,7 +51,7 @@ export default function VerifierEmailScreen() {
 
   if (state === 'loading') {
     return (
-      <View style={styles.screen}>
+      <View style={[styles.screen, { paddingBottom: insets.bottom }]}>
         <View style={styles.center}>
           <ActivityIndicator size="large" color="#059669" />
           <Text style={styles.title}>Vérification en cours...</Text>
@@ -60,7 +62,7 @@ export default function VerifierEmailScreen() {
 
   if (state === 'success') {
     return (
-      <View style={styles.screen}>
+      <View style={[styles.screen, { paddingBottom: insets.bottom }]}>
         <View style={styles.center}>
           <View style={[styles.icon, styles.iconSuccess]}><Text style={styles.iconEmoji}>✅</Text></View>
           <Text style={styles.title}>Email vérifié !</Text>
@@ -75,7 +77,7 @@ export default function VerifierEmailScreen() {
 
   // 'missing' or 'error'
   return (
-    <View style={styles.screen}>
+    <View style={[styles.screen, { paddingBottom: insets.bottom }]}>
       <View style={styles.center}>
         <View style={[styles.icon, styles.iconDanger]}><Text style={styles.iconEmoji}>⚠️</Text></View>
         <Text style={styles.title}>{state === 'missing' ? 'Lien invalide' : 'Échec de la vérification'}</Text>

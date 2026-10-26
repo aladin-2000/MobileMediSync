@@ -8,6 +8,7 @@ const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
+  const [profil, setProfil] = useState(null);
   const [delegueId, setDelegueId] = useState(null);
   const [medecinId, setMedecinId] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -27,8 +28,12 @@ export function AuthProvider({ children }) {
         setUser(freshUser);
         if (freshUser.role === 'DELEGUE') {
           setDelegueId(await authService.getDelegueId());
+          const d = await getDelegueByUserId(freshUser.id).catch(() => null);
+          if (d) setProfil({ nom: d.nom, prenom: d.prenom });
         } else if (freshUser.role === 'MEDECIN') {
           setMedecinId(await authService.getMedecinId());
+          const m = await getMedecinByUserId(freshUser.id).catch(() => null);
+          if (m) setProfil({ nom: m.nom, prenom: m.prenom });
         }
       }
       setIsLoading(false);
@@ -45,10 +50,12 @@ export function AuthProvider({ children }) {
       const delegue = await getDelegueByUserId(loggedUser.id);
       await authService.saveDelegueId(delegue.id);
       setDelegueId(delegue.id);
+      setProfil({ nom: delegue.nom, prenom: delegue.prenom });
     } else if (loggedUser.role === 'MEDECIN') {
       const medecin = await getMedecinByUserId(loggedUser.id);
       await authService.saveMedecinId(medecin.id);
       setMedecinId(medecin.id);
+      setProfil({ nom: medecin.nom, prenom: medecin.prenom });
     }
     return loggedUser;
   }, []);
@@ -56,6 +63,7 @@ export function AuthProvider({ children }) {
   const logout = useCallback(async () => {
     await authService.logout();
     setUser(null);
+    setProfil(null);
     setDelegueId(null);
     setMedecinId(null);
     router.replace('/');
@@ -66,7 +74,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, delegueId, medecinId, isLoading, login, logout, markPasswordChanged }}>
+    <AuthContext.Provider value={{ user, profil, delegueId, medecinId, isLoading, login, logout, markPasswordChanged }}>
       {children}
     </AuthContext.Provider>
   );

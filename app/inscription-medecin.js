@@ -5,10 +5,12 @@ import {
   KeyboardAvoidingView, ScrollView, Platform, Modal,
 } from 'react-native';
 import { router } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getSpecialites, getRegions, inscrireMedecin } from '../services/api';
 import useConfirmModal from '../hooks/useConfirmModal';
 
 export default function InscriptionMedecinScreen() {
+  const insets = useSafeAreaInsets();
   const [nom, setNom] = useState('');
   const [prenom, setPrenom] = useState('');
   const [email, setEmail] = useState('');
@@ -100,7 +102,7 @@ export default function InscriptionMedecinScreen() {
   return (
     <View style={styles.screen}>
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-        <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+        <ScrollView contentContainerStyle={[styles.scrollContent, { paddingBottom: 40 + insets.bottom }]} keyboardShouldPersistTaps="handled">
           <Text style={styles.title}>Créer un compte médecin</Text>
           <Text style={styles.subtitle}>Renseignez vos informations pour rejoindre MediSync</Text>
 

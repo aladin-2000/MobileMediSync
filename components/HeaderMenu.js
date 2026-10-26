@@ -1,8 +1,10 @@
 // components/HeaderMenu.js
 import React, { useRef, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Modal, Animated, Dimensions, Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useAuth } from '../context/AuthContext';
+import { useNotifications } from '../context/NotificationContext';
 import useConfirmModal from '../hooks/useConfirmModal';
 
 const SIDEBAR_WIDTH = Math.min(300, Dimensions.get('window').width * 0.78);
@@ -35,7 +37,9 @@ const MENU_ITEMS_BY_ROLE = {
 };
 
 export default function HeaderMenu({ onLogout }) {
-  const { user } = useAuth();
+  const { user, profil } = useAuth();
+  const { unreadCount } = useNotifications();
+  const insets = useSafeAreaInsets();
   const [visible, setVisible] = useState(false);
   const translateX = useRef(new Animated.Value(-SIDEBAR_WIDTH)).current;
   const backdropOpacity = useRef(new Animated.Value(0)).current;
@@ -71,7 +75,8 @@ export default function HeaderMenu({ onLogout }) {
   };
   const handleNavigate = (path) => closeSidebar(() => router.push(path));
 
-  const initiale = user?.email?.[0]?.toUpperCase() ?? '?';
+  const displayName = profil ? `${profil.prenom} ${profil.nom}` : user?.email;
+  const initiale = profil ? `${profil.prenom?.[0] ?? ''}${profil.nom?.[0] ?? ''}`.toUpperCase() : (user?.email?.[0]?.toUpperCase() ?? '?');
   const menuItems = MENU_ITEMS_BY_ROLE[user?.role] ?? [];
 
   return (
@@ -86,13 +91,13 @@ export default function HeaderMenu({ onLogout }) {
             <Animated.View style={[styles.backdrop, { opacity: backdropOpacity }]} />
           </TouchableOpacity>
 
-          <Animated.View style={[styles.sidebar, { transform: [{ translateX }] }]}>
+          <Animated.View style={[styles.sidebar, { transform: [{ translateX }], paddingBottom: 24 + insets.bottom }]}>
             {/* Header */}
             <View style={styles.header}>
               <View style={styles.avatar}>
                 <Text style={styles.avatarText}>{initiale}</Text>
               </View>
-              <Text style={styles.email} numberOfLines={1}>{user?.email}</Text>
+              <Text style={styles.userName} numberOfLines={1}>{displayName}</Text>
               {user?.role ? (
                 <View style={styles.roleBadge}>
                   <Text style={styles.roleBadgeText}>{ROLE_LABELS[user.role] || user.role}</Text>
@@ -102,20 +107,33 @@ export default function HeaderMenu({ onLogout }) {
 
             {/* Menu items */}
             <View style={styles.menuSection}>
-              {menuItems.map((item) => (
-                <TouchableOpacity
-                  key={item.path}
-                  style={styles.menuItem}
-                  onPress={() => handleNavigate(item.path)}
-                  activeOpacity={0.7}
-                >
-                  <View style={styles.menuItemIconWrap}>
-                    <Text style={styles.menuItemIcon}>{item.icon}</Text>
-                  </View>
-                  <Text style={styles.menuItemText}>{item.label}</Text>
-                  <Text style={styles.menuItemChevron}>›</Text>
-                </TouchableOpacity>
-              ))}
+              {menuItems.map((item) => {
+                const isNotif = item.label === 'Notifications';
+                return (
+                  <TouchableOpacity
+                    key={item.path}
+                    style={styles.menuItem}
+                    onPress={() => handleNavigate(item.path)}
+                    activeOpacity={0.7}
+                  >
+                    <View style={styles.menuItemIconWrap}>
+                      <Text style={styles.menuItemIcon}>{item.icon}</Text>
+                      {isNotif && unreadCount > 0 && (
+                        <View style={styles.notifBadge}>
+                          <Text style={styles.notifBadgeText}>{unreadCount > 99 ? '99+' : unreadCount}</Text>
+                        </View>
+                      )}
+                    </View>
+                    <Text style={styles.menuItemText}>{item.label}</Text>
+                    {isNotif && unreadCount > 0 && (
+                      <View style={styles.notifCountPill}>
+                        <Text style={styles.notifCountPillText}>{unreadCount} non lue{unreadCount > 1 ? 's' : ''}</Text>
+                      </View>
+                    )}
+                    <Text style={styles.menuItemChevron}>›</Text>
+                  </TouchableOpacity>
+                );
+              })}
 
               <View style={styles.menuDivider} />
 
@@ -166,7 +184,6 @@ const styles = StyleSheet.create({
     left: 0,
     width: SIDEBAR_WIDTH,
     backgroundColor: '#ffffff',
-    paddingBottom: 24,
     shadowColor: '#000',
     shadowOffset: { width: 2, height: 0 },
     shadowOpacity: 0.2,
@@ -196,9 +213,9 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#ffffff',
   },
-  email: {
-    fontSize: 15,
-    fontWeight: '700',
+  userName: {
+    fontSize: 16,
+    fontWeight: '800',
     color: '#ffffff',
   },
   roleBadge: {
@@ -248,6 +265,38 @@ const styles = StyleSheet.create({
     fontSize: 20,
     color: '#cbd5e1',
     fontWeight: '300',
+  },
+  notifBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    backgroundColor: '#ef4444',
+    borderRadius: 8,
+    minWidth: 16,
+    height: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 3,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+  },
+  notifBadgeText: {
+    color: '#ffffff',
+    fontSize: 9,
+    fontWeight: '800',
+    lineHeight: 12,
+  },
+  notifCountPill: {
+    backgroundColor: '#fef2f2',
+    borderRadius: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    marginRight: 4,
+  },
+  notifCountPillText: {
+    color: '#ef4444',
+    fontSize: 11,
+    fontWeight: '700',
   },
   menuDivider: {
     height: 1,
