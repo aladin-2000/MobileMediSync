@@ -12,10 +12,10 @@ export async function login(email, password) {
 }
 
 /** PUT /auth/changer-mot-de-passe — obligatoire tant que user.mustChangePassword === true. */
-export async function changerMotDePasse(currentPassword, newPassword) {
+export async function changerMotDePasse(newPassword) {
   await apiRequest('/auth/changer-mot-de-passe', {
     method: 'PUT',
-    body: { currentPassword, newPassword },
+    body: { newPassword },
   });
   const user = await getUser();
   if (user) {

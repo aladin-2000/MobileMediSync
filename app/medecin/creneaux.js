@@ -27,6 +27,7 @@ export default function RendezVousMedecinScreen() {
   const [selectedDate, setSelectedDate] = useState(() => new Date().toISOString().split('T')[0]);
 
   const [motifModal, setMotifModal] = useState({ visible: false, id: null, motif: '' });
+  const [detailRdv, setDetailRdv] = useState(null);
   const { confirm, notify, modal } = useConfirmModal();
 
   // Réutilisable pour les rafraîchissements manuels (après annuler/réalisé/absent) — safe à appeler
@@ -155,6 +156,7 @@ export default function RendezVousMedecinScreen() {
             key={item.id}
             appointment={item}
             role="MEDECIN"
+            onPress={() => setDetailRdv(item)}
             onAnnuler={() => openMotifModal(item.id)}
             onRealise={() => handleRealise(item.id)}
             onAbsent={() => handleAbsent(item.id)}
@@ -188,6 +190,49 @@ export default function RendezVousMedecinScreen() {
       </Modal>
 
       {modal}
+
+      <Modal visible={!!detailRdv} transparent animationType="fade" onRequestClose={() => setDetailRdv(null)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>Détails du rendez-vous</Text>
+            {detailRdv && (
+              <View style={styles.detailBody}>
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>Délégué</Text>
+                  <Text style={styles.detailValue}>{detailRdv.delegue?.nom}</Text>
+                </View>
+                {detailRdv.delegue?.laboName ? (
+                  <View style={styles.detailRow}>
+                    <Text style={styles.detailLabel}>Laboratoire</Text>
+                    <Text style={[styles.detailValue, styles.detailValueBold]}>{detailRdv.delegue.laboName}</Text>
+                  </View>
+                ) : null}
+                {detailRdv.delegue?.telephone ? (
+                  <View style={styles.detailRow}>
+                    <Text style={styles.detailLabel}>Téléphone</Text>
+                    <Text style={styles.detailValue}>{detailRdv.delegue.telephone}</Text>
+                  </View>
+                ) : null}
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>Date</Text>
+                  <Text style={styles.detailValue}>{formatFriendlyDate(detailRdv.date)}</Text>
+                </View>
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>Heure</Text>
+                  <Text style={styles.detailValue}>{detailRdv.heure}</Text>
+                </View>
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>Statut</Text>
+                  <Text style={styles.detailValue}>{detailRdv.statut}</Text>
+                </View>
+              </View>
+            )}
+            <TouchableOpacity style={styles.detailCloseBtn} onPress={() => setDetailRdv(null)}>
+              <Text style={styles.detailCloseBtnText}>Fermer</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 }
@@ -329,5 +374,45 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
     color: '#ffffff',
+  },
+  detailBody: {
+    marginTop: 12,
+    gap: 10,
+  },
+  detailRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+  },
+  detailLabel: {
+    fontSize: 13,
+    color: '#64748b',
+    fontWeight: '500',
+  },
+  detailValue: {
+    fontSize: 13,
+    color: '#0f172a',
+    fontWeight: '600',
+    textAlign: 'right',
+    flexShrink: 1,
+  },
+  detailValueBold: {
+    fontWeight: '800',
+    color: '#1971c2',
+  },
+  detailCloseBtn: {
+    marginTop: 16,
+    paddingVertical: 12,
+    borderRadius: 10,
+    alignItems: 'center',
+    backgroundColor: '#f1f5f9',
+  },
+  detailCloseBtnText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#475569',
   },
 });

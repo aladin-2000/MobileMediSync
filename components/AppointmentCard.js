@@ -6,7 +6,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
  * Carte d'un rendez-vous, réutilisée côté délégué (affiche le médecin) et côté médecin
  * (affiche le délégué). `role` détermine quelle personne afficher et quelles actions proposer.
  */
-export default function AppointmentCard({ appointment, role = 'DELEGUE', onAnnuler, onRealise, onAbsent }) {
+export default function AppointmentCard({ appointment, role = 'DELEGUE', onAnnuler, onRealise, onAbsent, onPress }) {
   const { heure, statut, statutBrut, realiseParDelegue, realiseParMedecin, medecin, delegue } = appointment;
   const person = role === 'MEDECIN' ? delegue : medecin;
 
@@ -33,7 +33,7 @@ export default function AppointmentCard({ appointment, role = 'DELEGUE', onAnnul
   const dejaConfirmeParMoi = role === 'MEDECIN' ? realiseParMedecin : realiseParDelegue;
 
   return (
-    <View style={styles.card}>
+    <TouchableOpacity style={styles.card} activeOpacity={0.7} onPress={onPress}>
       <View style={styles.topRow}>
         <View style={styles.timeSection}>
           <Text style={styles.time}>{heure}</Text>
@@ -44,6 +44,7 @@ export default function AppointmentCard({ appointment, role = 'DELEGUE', onAnnul
 
         <View style={styles.infoSection}>
           <Text style={styles.docName}>{person?.nom}</Text>
+          {person?.laboName ? <Text style={styles.laboName}>{person.laboName}</Text> : null}
           {person?.specialite ? <Text style={styles.docSpecialty}>{person.specialite}</Text> : null}
           {person?.adresse ? <Text style={styles.docAddress}>{person.adresse}</Text> : null}
           {person?.telephone ? <Text style={styles.docAddress}>{person.telephone}</Text> : null}
@@ -77,7 +78,7 @@ export default function AppointmentCard({ appointment, role = 'DELEGUE', onAnnul
           )}
         </View>
       )}
-    </View>
+    </TouchableOpacity>
   );
 }
 
@@ -131,6 +132,12 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '700',
     color: '#0f172a',
+  },
+  laboName: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#1971c2',
+    marginTop: 2,
   },
   docSpecialty: {
     fontSize: 12,

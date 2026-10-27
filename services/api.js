@@ -197,7 +197,7 @@ async function enrichirRendezVous(rendezVousList, role) {
         realiseParDelegue: rdv.realiseParDelegue,
         realiseParMedecin: rdv.realiseParMedecin,
         ...(role === 'MEDECIN'
-          ? { delegue: { nom: `${personne.prenom} ${personne.nom}`, telephone: personne.telephone } }
+          ? { delegue: { nom: `${personne.prenom} ${personne.nom}`, telephone: personne.telephone, laboName: personne.laboName || '' } }
           : { medecin: { nom: `Dr. ${personne.prenom} ${personne.nom}`, specialite: personne.specialite, adresse: personne.adresseCabinet } }),
       };
     })

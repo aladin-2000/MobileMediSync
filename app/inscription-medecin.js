@@ -109,11 +109,11 @@ export default function InscriptionMedecinScreen() {
           <View style={styles.row}>
             <View style={[styles.fieldGroup, styles.half]}>
               <Text style={styles.label}>Nom</Text>
-              <TextInput style={styles.input} value={nom} onChangeText={setNom} placeholder="Nom" />
+              <TextInput style={styles.input} value={nom} onChangeText={setNom} placeholder="Nom" placeholderTextColor="#a0a7b0" />
             </View>
             <View style={[styles.fieldGroup, styles.half]}>
               <Text style={styles.label}>Prénom</Text>
-              <TextInput style={styles.input} value={prenom} onChangeText={setPrenom} placeholder="Prénom" />
+              <TextInput style={styles.input} value={prenom} onChangeText={setPrenom} placeholder="Prénom" placeholderTextColor="#a0a7b0" />
             </View>
           </View>
 
@@ -122,7 +122,7 @@ export default function InscriptionMedecinScreen() {
             <TextInput
               style={styles.input} value={email} onChangeText={setEmail}
               autoCapitalize="none" autoCorrect={false} keyboardType="email-address"
-              placeholder="vous@exemple.com"
+              placeholder="Entrez votre email" placeholderTextColor="#a0a7b0"
             />
           </View>
 
@@ -131,14 +131,14 @@ export default function InscriptionMedecinScreen() {
               <Text style={styles.label}>Mot de passe</Text>
               <TextInput
                 style={styles.input} value={password} onChangeText={setPassword}
-                secureTextEntry placeholder="6 caractères min."
+                secureTextEntry placeholder="6 caractères min." placeholderTextColor="#a0a7b0"
               />
             </View>
             <View style={[styles.fieldGroup, styles.half]}>
-              <Text style={styles.label}>Confirmer</Text>
+              <Text style={styles.label}>Confirmer votre mot de passe</Text>
               <TextInput
                 style={styles.input} value={confirmPassword} onChangeText={setConfirmPassword}
-                secureTextEntry placeholder="Confirmer"
+                secureTextEntry placeholder="6 caractères min." placeholderTextColor="#a0a7b0"
               />
             </View>
           </View>
@@ -159,7 +159,7 @@ export default function InscriptionMedecinScreen() {
 
           <View style={styles.fieldGroup}>
             <Text style={styles.label}>Adresse du cabinet</Text>
-            <TextInput style={styles.input} value={adresseCabinet} onChangeText={setAdresseCabinet} placeholder="Adresse du cabinet" />
+            <TextInput style={styles.input} value={adresseCabinet} onChangeText={setAdresseCabinet} placeholder="Adresse du cabinet" placeholderTextColor="#a0a7b0" />
           </View>
 
           <View style={styles.fieldGroup}>
@@ -178,7 +178,7 @@ export default function InscriptionMedecinScreen() {
 
           <View style={styles.fieldGroup}>
             <Text style={styles.label}>Téléphone</Text>
-            <TextInput style={styles.input} value={telephone} onChangeText={setTelephone} keyboardType="phone-pad" placeholder="+216 .." />
+            <TextInput style={styles.input} value={telephone} onChangeText={setTelephone} keyboardType="phone-pad" placeholder="+216 .." placeholderTextColor="#a0a7b0" />
           </View>
 
           <View style={styles.infoBanner}>

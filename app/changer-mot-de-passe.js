@@ -10,12 +10,21 @@ import useConfirmModal from "../hooks/useConfirmModal";
 export default function ChangerMotDePasseScreen() {
   const { user, markPasswordChanged } = useAuth();
   const insets = useSafeAreaInsets();
-  const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const { confirm, notify, modal } = useConfirmModal();
 
   const handleSubmit = async () => {
+    if (!newPassword || !confirmPassword) {
+      notify({ title: "Champs requis", message: "Veuillez remplir tous les champs.", variant: "warning" });
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      notify({ title: "Erreur", message: "Les deux mots de passe ne correspondent pas.", variant: "warning" });
+      return;
+    }
+
     const ok = await confirm({
       title: "Changer le mot de passe",
       message: "Confirmez-vous le changement de votre mot de passe ?",
@@ -27,7 +36,7 @@ export default function ChangerMotDePasseScreen() {
 
     setLoading(true);
     try {
-      await authService.changerMotDePasse(currentPassword, newPassword);
+      await authService.changerMotDePasse(newPassword);
       markPasswordChanged();
       if (user.role === "MEDECIN") router.replace("/medecin");
       else if (user.role === "DELEGUE") router.replace("/delegue/home");
@@ -45,15 +54,11 @@ export default function ChangerMotDePasseScreen() {
         <Text style={styles.title}>Changement de mot de passe requis</Text>
         <Text style={styles.subtitle}>Choisissez un nouveau mot de passe avant de continuer.</Text>
 
-        <Text>Mot de passe actuel</Text>
-        <TextInput
-          style={styles.input}
-          value={currentPassword}
-          onChangeText={setCurrentPassword}
-          secureTextEntry
-        />
         <Text>Nouveau mot de passe</Text>
-        <TextInput style={styles.input} value={newPassword} onChangeText={setNewPassword} secureTextEntry />
+        <TextInput style={styles.input} value={newPassword} onChangeText={setNewPassword} secureTextEntry placeholder="Choisissez un nouveau mot de passe" />
+
+        <Text>Confirmer le mot de passe</Text>
+        <TextInput style={styles.input} value={confirmPassword} onChangeText={setConfirmPassword} secureTextEntry placeholder="Retapez le nouveau mot de passe" />
 
         <TouchableOpacity style={styles.button} onPress={handleSubmit} disabled={loading} activeOpacity={0.8}>
           {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Valider</Text>}
