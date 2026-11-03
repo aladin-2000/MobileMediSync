@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   ScrollView,
   Platform,
+  Image,
 } from "react-native";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -69,7 +70,7 @@ export default function Index() {
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.logoWrapper}>
-            <Text style={styles.logoEmoji}>🩺</Text>
+            <Image source={require('../assets/images/logo.png')} style={styles.logoImage} />
           </View>
           <Text style={styles.brand}>MediSync</Text>
           <Text style={styles.tagline}>Gestion des rendez-vous médicaux</Text>
@@ -173,18 +174,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   logoWrapper: {
-    width: 84,
-    height: 84,
-    borderRadius: 42,
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
-    borderWidth: 2,
-    borderColor: "rgba(255, 255, 255, 0.6)",
+    width: 100,
+    height: 100,
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 14,
   },
-  logoEmoji: {
-    fontSize: 38,
+  logoImage: {
+    width: 100,
+    height: 100,
+    resizeMode: "contain",
   },
   brand: {
     fontSize: 26,

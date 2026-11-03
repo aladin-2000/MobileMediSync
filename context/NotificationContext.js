@@ -1,6 +1,7 @@
 // context/NotificationContext.js
 import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react';
 import { AppState } from 'react-native';
+import { Audio } from 'expo-av';
 import { getNombreNotificationsNonLues } from '../services/api';
 import { useAuth } from './AuthContext';
 
@@ -11,17 +12,45 @@ const NotificationContext = createContext(null);
 export function NotificationProvider({ children }) {
   const { user } = useAuth();
   const [unreadCount, setUnreadCount] = useState(0);
+  const previousCountRef = useRef(0);
+  const soundRef = useRef(null);
   const intervalRef = useRef(null);
   const appStateRef = useRef(AppState.currentState);
+
+  const playNotificationSound = useCallback(async () => {
+    try {
+      if (soundRef.current) {
+        await soundRef.current.replayAsync();
+      } else {
+        const { sound } = await Audio.Sound.createAsync(
+          require('../assets/sounds/notification.wav')
+        );
+        soundRef.current = sound;
+        await sound.playAsync();
+      }
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (soundRef.current) {
+        soundRef.current.unloadAsync();
+      }
+    };
+  }, []);
 
   const fetchCount = useCallback(async () => {
     try {
       const count = await getNombreNotificationsNonLues();
+      if (count > previousCountRef.current) {
+        playNotificationSound();
+      }
+      previousCountRef.current = count;
       setUnreadCount(count);
     } catch {
       // silently ignore — interceptor handles 401
     }
-  }, []);
+  }, [playNotificationSound]);
 
   const startPolling = useCallback(() => {
     if (intervalRef.current) return;

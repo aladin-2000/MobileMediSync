@@ -5,7 +5,7 @@ import { router } from 'expo-router';
 import { getToken, clearSession } from './storage';
 
 const DEV_URL = 'http://192.168.100.5:8080';
-const PROD_URL = 'https://medisync-1tu5.onrender.com';
+const PROD_URL = 'https://api.medisync.tn';
 export const BASE_URL = __DEV__ ? DEV_URL : PROD_URL;
 
 /**
