@@ -1,11 +1,11 @@
 // context/NotificationContext.js
 import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react';
 import { AppState } from 'react-native';
-import { Audio } from 'expo-av';
+import { createAudioPlayer } from 'expo-audio';
 import { getNombreNotificationsNonLues } from '../services/api';
 import { useAuth } from './AuthContext';
 
-const POLL_INTERVAL_MS = 30000;
+const POLL_INTERVAL_MS = 15000;
 
 const NotificationContext = createContext(null);
 
@@ -13,29 +13,27 @@ export function NotificationProvider({ children }) {
   const { user } = useAuth();
   const [unreadCount, setUnreadCount] = useState(0);
   const previousCountRef = useRef(0);
-  const soundRef = useRef(null);
+  const playerRef = useRef(null);
   const intervalRef = useRef(null);
   const appStateRef = useRef(AppState.currentState);
 
   const playNotificationSound = useCallback(async () => {
     try {
-      if (soundRef.current) {
-        await soundRef.current.replayAsync();
+      if (!playerRef.current) {
+        playerRef.current = createAudioPlayer(require('../assets/sounds/notification.wav'));
       } else {
-        const { sound } = await Audio.Sound.createAsync(
-          require('../assets/sounds/notification.wav')
-        );
-        soundRef.current = sound;
-        await sound.playAsync();
+        await playerRef.current.seekTo(0);
       }
-    } catch {}
+      playerRef.current.play();
+    } catch (error) {
+      console.warn('Lecture du son de notification impossible', error);
+    }
   }, []);
 
   useEffect(() => {
     return () => {
-      if (soundRef.current) {
-        soundRef.current.unloadAsync();
-      }
+      playerRef.current?.remove();
+      playerRef.current = null;
     };
   }, []);
 

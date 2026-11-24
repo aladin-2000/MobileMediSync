@@ -27,8 +27,8 @@ export const saveSession = ({ token, user }) =>
 
 export const saveUser = (user) => AsyncStorage.setItem(USER_KEY, JSON.stringify(user));
 
-export const saveDelegueId = (delegueId) => AsyncStorage.setItem(DELEGUE_ID_KEY, delegueId);
+export const saveDelegueId = (delegueId) => AsyncStorage.setItem(DELEGUE_ID_KEY, String(delegueId));
 
-export const saveMedecinId = (medecinId) => AsyncStorage.setItem(MEDECIN_ID_KEY, medecinId);
+export const saveMedecinId = (medecinId) => AsyncStorage.setItem(MEDECIN_ID_KEY, String(medecinId));
 
 export const clearSession = () => AsyncStorage.multiRemove([TOKEN_KEY, USER_KEY, DELEGUE_ID_KEY, MEDECIN_ID_KEY]);

@@ -1,9 +1,10 @@
 // app/medecin/_layout.js
 import React from 'react';
 import { Tabs } from 'expo-router';
-import { Text } from 'react-native';
+import { Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import HeaderMenu from '../../components/HeaderMenu';
+import NotesEquipeFab from '../../components/NotesEquipeFab';
 import { useAuth } from '../../context/AuthContext';
 
 export default function MedecinLayout() {
@@ -11,6 +12,7 @@ export default function MedecinLayout() {
   const insets = useSafeAreaInsets();
 
   return (
+    <View style={{ flex: 1 }}>
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: '#059669',
@@ -77,5 +79,8 @@ export default function MedecinLayout() {
       <Tabs.Screen name="historique" options={{ href: null }} />
       <Tabs.Screen name="notifications" options={{ href: null }} />
     </Tabs>
+    {/* Bulle flottante « Notes à l'équipe », au-dessus de la barre d'onglets */}
+    <NotesEquipeFab bottomOffset={56 + insets.bottom + 16} />
+    </View>
   );
 }

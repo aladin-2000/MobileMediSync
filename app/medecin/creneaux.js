@@ -7,6 +7,8 @@ import CustomCalendar from '../../components/CustomCalendar';
 import AppointmentCard from '../../components/AppointmentCard';
 import RefreshButton from '../../components/RefreshButton';
 import useConfirmModal from '../../hooks/useConfirmModal';
+import { toISODate } from '../../services/dateUtils';
+import { formatPhone } from '../../utils/phone';
 
 const MONTHS_FR = [
   'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
@@ -24,7 +26,7 @@ export default function RendezVousMedecinScreen() {
   const { medecinId } = useAuth();
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedDate, setSelectedDate] = useState(() => new Date().toISOString().split('T')[0]);
+  const [selectedDate, setSelectedDate] = useState(() => toISODate(new Date()));
 
   const [motifModal, setMotifModal] = useState({ visible: false, id: null, motif: '' });
   const [detailRdv, setDetailRdv] = useState(null);
@@ -210,7 +212,13 @@ export default function RendezVousMedecinScreen() {
                 {detailRdv.delegue?.telephone ? (
                   <View style={styles.detailRow}>
                     <Text style={styles.detailLabel}>Téléphone</Text>
-                    <Text style={styles.detailValue}>{detailRdv.delegue.telephone}</Text>
+                    <Text style={styles.detailValue}>{formatPhone(detailRdv.delegue.telephone)}</Text>
+                  </View>
+                ) : null}
+                {detailRdv.delegue?.telephone2 ? (
+                  <View style={styles.detailRow}>
+                    <Text style={styles.detailLabel}>Téléphone 2</Text>
+                    <Text style={styles.detailValue}>{formatPhone(detailRdv.delegue.telephone2)}</Text>
                   </View>
                 ) : null}
                 <View style={styles.detailRow}>

@@ -7,12 +7,13 @@ import CustomCalendar from '../../components/CustomCalendar';
 import AppointmentCard from '../../components/AppointmentCard';
 import RefreshButton from '../../components/RefreshButton';
 import useConfirmModal from '../../hooks/useConfirmModal';
+import { toISODate } from '../../services/dateUtils';
 
 export default function AppointmentsCalendarScreen() {
   const { delegueId } = useAuth();
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedDate, setSelectedDate] = useState(() => new Date().toISOString().split('T')[0]); // Format: YYYY-MM-DD
+  const [selectedDate, setSelectedDate] = useState(() => toISODate(new Date())); // Format: YYYY-MM-DD
   const { confirm, notify, modal } = useConfirmModal();
 
   // Reusable fetch for manual refreshes (after annuler/réalisé/absent) — safe to call setState

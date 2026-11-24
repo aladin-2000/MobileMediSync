@@ -8,6 +8,9 @@ import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getLaboratoires, inscrireDelegue } from '../services/api';
 import useConfirmModal from '../hooks/useConfirmModal';
+import PasswordStrength from '../components/PasswordStrength';
+import { passwordError } from '../utils/passwordPolicy';
+import { formatPhone, isValidPhone, normalizePhone, phoneInputProps, PHONE_ERROR_MESSAGE } from '../utils/phone';
 
 export default function InscriptionDelegueScreen() {
   const insets = useSafeAreaInsets();
@@ -20,6 +23,7 @@ export default function InscriptionDelegueScreen() {
   const [laboName, setLaboName] = useState('');
   const [laboInconnu, setLaboInconnu] = useState(false);
   const [telephone, setTelephone] = useState('');
+  const [telephone2, setTelephone2] = useState('');
 
   const [laboratoires, setLaboratoires] = useState([]);
   const [laboPickerVisible, setLaboPickerVisible] = useState(false);
@@ -44,8 +48,13 @@ export default function InscriptionDelegueScreen() {
       notify({ title: 'Laboratoire manquant', message: 'Merci de choisir votre laboratoire ou d’en saisir le nom.', variant: 'warning' });
       return;
     }
-    if (password.length < 6) {
-      notify({ title: 'Mot de passe trop court', message: 'Le mot de passe doit contenir au moins 6 caractères.', variant: 'warning' });
+    if (!isValidPhone(telephone) || !isValidPhone(telephone2)) {
+      notify({ title: 'Téléphone invalide', message: PHONE_ERROR_MESSAGE, variant: 'warning' });
+      return;
+    }
+    const pwdError = passwordError(password);
+    if (pwdError) {
+      notify({ title: 'Mot de passe trop faible', message: pwdError, variant: 'warning' });
       return;
     }
     if (password !== confirmPassword) {
@@ -68,6 +77,7 @@ export default function InscriptionDelegueScreen() {
         email, password, nom, prenom,
         laboName: laboInconnu ? laboName : laboLibelle(laboratoireId),
         telephone,
+        telephone2: telephone2.trim() || undefined,
       });
       setDone(true);
     } catch (error) {
@@ -129,17 +139,18 @@ export default function InscriptionDelegueScreen() {
               <Text style={styles.label}>Mot de passe</Text>
               <TextInput
                 style={styles.input} value={password} onChangeText={setPassword}
-                secureTextEntry placeholder="6 caractères min." placeholderTextColor="#a0a7b0"
+                secureTextEntry placeholder="10 caractères min." placeholderTextColor="#a0a7b0"
               />
             </View>
             <View style={[styles.fieldGroup, styles.half]}>
               <Text style={styles.label}>Confirmer votre mot de passe</Text>
               <TextInput
                 style={styles.input} value={confirmPassword} onChangeText={setConfirmPassword}
-                secureTextEntry placeholder="6 caractères min." placeholderTextColor="#a0a7b0"
+                secureTextEntry placeholder="10 caractères min." placeholderTextColor="#a0a7b0"
               />
             </View>
           </View>
+          <PasswordStrength password={password} style={{ marginTop: -6, marginBottom: 16 }} />
 
           <View style={styles.fieldGroup}>
             <Text style={styles.label}>Laboratoire</Text>
@@ -174,7 +185,12 @@ export default function InscriptionDelegueScreen() {
 
           <View style={styles.fieldGroup}>
             <Text style={styles.label}>Téléphone</Text>
-            <TextInput style={styles.input} value={telephone} onChangeText={setTelephone} keyboardType="phone-pad" placeholder="+216 .." placeholderTextColor="#a0a7b0" />
+            <TextInput style={styles.input} {...phoneInputProps(telephone, setTelephone)} />
+          </View>
+
+          <View style={styles.fieldGroup}>
+            <Text style={styles.label}>Téléphone 2 (optionnel)</Text>
+            <TextInput style={styles.input} {...phoneInputProps(telephone2, setTelephone2)} />
           </View>
 
           <TouchableOpacity

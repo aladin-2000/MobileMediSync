@@ -6,8 +6,12 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { getSpecialites, getRegions, inscrireMedecin } from '../services/api';
+import { getSpecialites, getRegions, getFonctions, getEtablissements, inscrireMedecin } from '../services/api';
+import OptionPickerModal from '../components/OptionPickerModal';
 import useConfirmModal from '../hooks/useConfirmModal';
+import PasswordStrength from '../components/PasswordStrength';
+import { passwordError } from '../utils/passwordPolicy';
+import { formatPhone, isValidPhone, normalizePhone, phoneInputProps, PHONE_ERROR_MESSAGE } from '../utils/phone';
 
 export default function InscriptionMedecinScreen() {
   const insets = useSafeAreaInsets();
@@ -20,11 +24,18 @@ export default function InscriptionMedecinScreen() {
   const [adresseCabinet, setAdresseCabinet] = useState('');
   const [regionId, setRegionId] = useState('');
   const [telephone, setTelephone] = useState('');
+  const [telephone2, setTelephone2] = useState('');
+  const [fonction, setFonction] = useState('');
+  const [etablissementId, setEtablissementId] = useState('');
 
   const [specialites, setSpecialites] = useState([]);
   const [regions, setRegions] = useState([]);
   const [specialitePickerVisible, setSpecialitePickerVisible] = useState(false);
   const [regionPickerVisible, setRegionPickerVisible] = useState(false);
+  const [fonctions, setFonctions] = useState([]);
+  const [etablissements, setEtablissements] = useState([]);
+  const [fonctionPickerVisible, setFonctionPickerVisible] = useState(false);
+  const [etablissementPickerVisible, setEtablissementPickerVisible] = useState(false);
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
   const { confirm, notify, modal } = useConfirmModal();
@@ -37,16 +48,30 @@ export default function InscriptionMedecinScreen() {
     getRegions().then(setRegions).catch(() => {});
   }, []);
 
+  useEffect(() => {
+    getFonctions().then(setFonctions).catch(() => {});
+    getEtablissements()
+      .then((list) => setEtablissements(list.map((e) => ({ valeur: e.id, libelle: e.nom, sousLibelle: e.regionNom }))))
+      .catch(() => {});
+  }, []);
+
   const specialiteLibelle = (valeur) => specialites.find((s) => s.valeur === valeur)?.libelle ?? valeur;
   const regionLibelle = (valeur) => regions.find((r) => r.valeur === valeur)?.libelle ?? valeur;
+  const fonctionLibelle = (valeur) => fonctions.find((f) => f.valeur === valeur)?.libelle ?? valeur;
+  const etablissementLibelle = (valeur) => etablissements.find((e) => e.valeur === valeur)?.libelle ?? valeur;
 
   const handleSubmit = async () => {
-    if (!nom || !prenom || !email || !password || !specialite || !adresseCabinet || !regionId || !telephone) {
+    if (!nom || !prenom || !email || !password || !specialite || !fonction || !adresseCabinet || !regionId || !telephone) {
       notify({ title: 'Champs manquants', message: 'Merci de remplir tous les champs obligatoires.', variant: 'warning' });
       return;
     }
-    if (password.length < 6) {
-      notify({ title: 'Mot de passe trop court', message: 'Le mot de passe doit contenir au moins 6 caractères.', variant: 'warning' });
+    if (!isValidPhone(telephone) || !isValidPhone(telephone2)) {
+      notify({ title: 'Téléphone invalide', message: PHONE_ERROR_MESSAGE, variant: 'warning' });
+      return;
+    }
+    const pwdError = passwordError(password);
+    if (pwdError) {
+      notify({ title: 'Mot de passe trop faible', message: pwdError, variant: 'warning' });
       return;
     }
     if (password !== confirmPassword) {
@@ -68,6 +93,9 @@ export default function InscriptionMedecinScreen() {
       await inscrireMedecin({
         email, password, nom, prenom, specialite, adresseCabinet, regionId,
         telephone,
+        telephone2: telephone2.trim() || undefined,
+        fonction,
+        etablissementId: etablissementId || undefined,
       });
       setDone(true);
     } catch (error) {
@@ -131,17 +159,18 @@ export default function InscriptionMedecinScreen() {
               <Text style={styles.label}>Mot de passe</Text>
               <TextInput
                 style={styles.input} value={password} onChangeText={setPassword}
-                secureTextEntry placeholder="6 caractères min." placeholderTextColor="#a0a7b0"
+                secureTextEntry placeholder="10 caractères min." placeholderTextColor="#a0a7b0"
               />
             </View>
             <View style={[styles.fieldGroup, styles.half]}>
               <Text style={styles.label}>Confirmer votre mot de passe</Text>
               <TextInput
                 style={styles.input} value={confirmPassword} onChangeText={setConfirmPassword}
-                secureTextEntry placeholder="6 caractères min." placeholderTextColor="#a0a7b0"
+                secureTextEntry placeholder="10 caractères min." placeholderTextColor="#a0a7b0"
               />
             </View>
           </View>
+          <PasswordStrength password={password} style={{ marginTop: -6, marginBottom: 16 }} />
 
           <View style={styles.fieldGroup}>
             <Text style={styles.label}>Spécialité</Text>
@@ -152,6 +181,34 @@ export default function InscriptionMedecinScreen() {
             >
               <Text style={specialite ? styles.selectFieldValue : styles.selectFieldPlaceholder}>
                 {specialite ? specialiteLibelle(specialite) : 'Choisir une spécialité'}
+              </Text>
+              <Text style={styles.selectFieldChevron}>▾</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.fieldGroup}>
+            <Text style={styles.label}>Fonction</Text>
+            <TouchableOpacity
+              style={styles.selectField}
+              onPress={() => setFonctionPickerVisible(true)}
+              activeOpacity={0.7}
+            >
+              <Text style={fonction ? styles.selectFieldValue : styles.selectFieldPlaceholder}>
+                {fonction ? fonctionLibelle(fonction) : 'Choisir une fonction'}
+              </Text>
+              <Text style={styles.selectFieldChevron}>▾</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.fieldGroup}>
+            <Text style={styles.label}>Établissement (optionnel)</Text>
+            <TouchableOpacity
+              style={styles.selectField}
+              onPress={() => setEtablissementPickerVisible(true)}
+              activeOpacity={0.7}
+            >
+              <Text style={etablissementId ? styles.selectFieldValue : styles.selectFieldPlaceholder}>
+                {etablissementId ? etablissementLibelle(etablissementId) : 'Aucun établissement'}
               </Text>
               <Text style={styles.selectFieldChevron}>▾</Text>
             </TouchableOpacity>
@@ -178,7 +235,12 @@ export default function InscriptionMedecinScreen() {
 
           <View style={styles.fieldGroup}>
             <Text style={styles.label}>Téléphone</Text>
-            <TextInput style={styles.input} value={telephone} onChangeText={setTelephone} keyboardType="phone-pad" placeholder="+216 .." placeholderTextColor="#a0a7b0" />
+            <TextInput style={styles.input} {...phoneInputProps(telephone, setTelephone)} />
+          </View>
+
+          <View style={styles.fieldGroup}>
+            <Text style={styles.label}>Téléphone 2 (optionnel)</Text>
+            <TextInput style={styles.input} {...phoneInputProps(telephone2, setTelephone2)} />
           </View>
 
           <View style={styles.infoBanner}>
@@ -271,6 +333,27 @@ export default function InscriptionMedecinScreen() {
           </TouchableOpacity>
         </TouchableOpacity>
       </Modal>
+
+      <OptionPickerModal
+        visible={fonctionPickerVisible}
+        title="Choisir une fonction"
+        options={fonctions}
+        selected={fonction}
+        onSelect={setFonction}
+        onClose={() => setFonctionPickerVisible(false)}
+      />
+
+      <OptionPickerModal
+        visible={etablissementPickerVisible}
+        title="Choisir un établissement"
+        options={etablissements}
+        selected={etablissementId}
+        onSelect={setEtablissementId}
+        onClose={() => setEtablissementPickerVisible(false)}
+        emptyLabel="Aucun établissement"
+        searchable
+        searchPlaceholder="Nom ou région (ex. Charles Nicolle, Sfax…)"
+      />
 
       {modal}
     </View>

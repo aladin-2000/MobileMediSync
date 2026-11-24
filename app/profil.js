@@ -7,9 +7,11 @@ import { useAuth } from '../context/AuthContext';
 import {
   getDelegueByUserId, getMedecinByUserId,
   updateMonProfilMedecin, updateMonProfilDelegue,
-  getSpecialites, getRegions,
+  getSpecialites, getRegions, getFonctions, getEtablissements,
 } from '../services/api';
+import OptionPickerModal from '../components/OptionPickerModal';
 import useConfirmModal from '../hooks/useConfirmModal';
+import { formatPhone, isValidPhone, normalizePhone, phoneInputProps, PHONE_ERROR_MESSAGE } from '../utils/phone';
 
 const ROLE_LABELS = {
   DELEGUE: 'Délégué médical',
@@ -27,11 +29,15 @@ export default function ProfilScreen() {
 
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState({ nom: '', prenom: '', telephone: '', specialite: '', adresseCabinet: '', regionId: '' });
+  const [form, setForm] = useState({ nom: '', prenom: '', telephone: '', telephone2: '', specialite: '', fonction: '', etablissementId: '', adresseCabinet: '', regionId: '' });
   const [specialites, setSpecialites] = useState([]);
   const [regions, setRegions] = useState([]);
   const [specialitePickerVisible, setSpecialitePickerVisible] = useState(false);
   const [regionPickerVisible, setRegionPickerVisible] = useState(false);
+  const [fonctions, setFonctions] = useState([]);
+  const [etablissements, setEtablissements] = useState([]);
+  const [fonctionPickerVisible, setFonctionPickerVisible] = useState(false);
+  const [etablissementPickerVisible, setEtablissementPickerVisible] = useState(false);
   const { confirm, notify, modal } = useConfirmModal();
 
   const canEdit = user?.role === 'DELEGUE' || user?.role === 'MEDECIN';
@@ -60,17 +66,26 @@ export default function ProfilScreen() {
     if (user?.role === 'MEDECIN') {
       getSpecialites().then(setSpecialites).catch(() => {});
       getRegions().then(setRegions).catch(() => {});
+      getFonctions().then(setFonctions).catch(() => {});
+      getEtablissements()
+        .then((list) => setEtablissements(list.map((e) => ({ valeur: e.id, libelle: e.nom, sousLibelle: e.regionNom }))))
+        .catch(() => {});
     }
   }, [user]);
 
   const specialiteLibelle = (valeur) => specialites.find((s) => s.valeur === valeur)?.libelle ?? valeur;
   const regionLibelle = (valeur) => regions.find((r) => r.valeur === valeur)?.libelle ?? valeur;
+  const fonctionLibelle = (valeur) => fonctions.find((f) => f.valeur === valeur)?.libelle ?? valeur;
+  const etablissementLibelle = (valeur) => etablissements.find((e) => e.valeur === valeur)?.libelle ?? valeur;
 
   const openEdit = () => {
     setForm({
       nom: profil?.nom ?? '',
       prenom: profil?.prenom ?? '',
-      telephone: profil?.telephone ?? '',
+      telephone: normalizePhone(profil?.telephone),
+      telephone2: normalizePhone(profil?.telephone2),
+      fonction: profil?.fonction ?? '',
+      etablissementId: profil?.etablissementId ?? '',
       specialite: profil?.specialite ?? '',
       adresseCabinet: profil?.adresseCabinet ?? '',
       regionId: profil?.regionId ?? '',
@@ -83,8 +98,13 @@ export default function ProfilScreen() {
       notify({ title: 'Champs manquants', message: 'Nom et prénom sont obligatoires.', variant: 'warning' });
       return;
     }
-    if (user.role === 'MEDECIN' && (!form.specialite || !form.adresseCabinet.trim())) {
-      notify({ title: 'Champs manquants', message: 'Spécialité et adresse du cabinet sont obligatoires.', variant: 'warning' });
+    if (user.role === 'MEDECIN' && (!form.specialite || !form.fonction || !form.adresseCabinet.trim())) {
+      notify({ title: 'Champs manquants', message: 'Spécialité, fonction et adresse du cabinet sont obligatoires.', variant: 'warning' });
+      return;
+    }
+
+    if (!isValidPhone(form.telephone) || !isValidPhone(form.telephone2)) {
+      notify({ title: 'Téléphone invalide', message: PHONE_ERROR_MESSAGE, variant: 'warning' });
       return;
     }
 
@@ -107,11 +127,15 @@ export default function ProfilScreen() {
             adresseCabinet: form.adresseCabinet.trim(),
             regionId: form.regionId || undefined,
             telephone: form.telephone.trim() || undefined,
+            telephone2: form.telephone2.trim(),
+            fonction: form.fonction,
+            etablissementId: form.etablissementId,
           })
         : await updateMonProfilDelegue({
             nom: form.nom.trim(),
             prenom: form.prenom.trim(),
             telephone: form.telephone.trim() || undefined,
+            telephone2: form.telephone2.trim(),
           });
       setProfil(updated);
       setEditing(false);
@@ -158,6 +182,32 @@ export default function ProfilScreen() {
                 </TouchableOpacity>
               </View>
               <View style={styles.fieldGroup}>
+                <Text style={styles.label}>Fonction</Text>
+                <TouchableOpacity
+                  style={styles.selectField}
+                  onPress={() => setFonctionPickerVisible(true)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={form.fonction ? styles.selectFieldValue : styles.selectFieldPlaceholder}>
+                    {form.fonction ? fonctionLibelle(form.fonction) : 'Choisir une fonction'}
+                  </Text>
+                  <Text style={styles.selectFieldChevron}>▾</Text>
+                </TouchableOpacity>
+              </View>
+              <View style={styles.fieldGroup}>
+                <Text style={styles.label}>Établissement</Text>
+                <TouchableOpacity
+                  style={styles.selectField}
+                  onPress={() => setEtablissementPickerVisible(true)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={form.etablissementId ? styles.selectFieldValue : styles.selectFieldPlaceholder}>
+                    {form.etablissementId ? etablissementLibelle(form.etablissementId) : 'Aucun établissement'}
+                  </Text>
+                  <Text style={styles.selectFieldChevron}>▾</Text>
+                </TouchableOpacity>
+              </View>
+              <View style={styles.fieldGroup}>
                 <Text style={styles.label}>Adresse du cabinet</Text>
                 <TextInput
                   style={styles.input} value={form.adresseCabinet}
@@ -183,8 +233,15 @@ export default function ProfilScreen() {
           <View style={styles.fieldGroup}>
             <Text style={styles.label}>Téléphone</Text>
             <TextInput
-              style={styles.input} value={form.telephone} keyboardType="phone-pad"
-              onChangeText={(v) => setForm((f) => ({ ...f, telephone: v }))}
+              style={styles.input}
+              {...phoneInputProps(form.telephone, (v) => setForm((f) => ({ ...f, telephone: v })))}
+            />
+          </View>
+          <View style={styles.fieldGroup}>
+            <Text style={styles.label}>Téléphone 2 (optionnel)</Text>
+            <TextInput
+              style={styles.input}
+              {...phoneInputProps(form.telephone2, (v) => setForm((f) => ({ ...f, telephone2: v })))}
             />
           </View>
         </View>
@@ -268,6 +325,27 @@ export default function ProfilScreen() {
           </TouchableOpacity>
         </Modal>
 
+        <OptionPickerModal
+          visible={fonctionPickerVisible}
+          title="Choisir une fonction"
+          options={fonctions}
+          selected={form.fonction}
+          onSelect={(v) => setForm((f) => ({ ...f, fonction: v }))}
+          onClose={() => setFonctionPickerVisible(false)}
+        />
+
+        <OptionPickerModal
+          visible={etablissementPickerVisible}
+          title="Choisir un établissement"
+          options={etablissements}
+          selected={form.etablissementId}
+          onSelect={(v) => setForm((f) => ({ ...f, etablissementId: v }))}
+          onClose={() => setEtablissementPickerVisible(false)}
+          emptyLabel="Aucun établissement"
+          searchable
+          searchPlaceholder="Nom ou région (ex. Charles Nicolle, Sfax…)"
+        />
+
         {modal}
       </ScrollView>
     );
@@ -309,7 +387,10 @@ export default function ProfilScreen() {
         <View style={styles.card}>
           <InfoRow label="Email" value={user?.email} />
           {user?.role === 'DELEGUE' && profil?.telephone ? (
-            <InfoRow label="Téléphone" value={profil.telephone} />
+            <InfoRow label="Téléphone" value={formatPhone(profil.telephone)} />
+          ) : null}
+          {user?.role === 'DELEGUE' && profil?.telephone2 ? (
+            <InfoRow label="Téléphone 2" value={formatPhone(profil.telephone2)} />
           ) : null}
           {user?.role === 'DELEGUE' && typeof profil?.scoreFiabilite === 'number' ? (
             <InfoRow label="Score de fiabilité" value={`${profil.scoreFiabilite}%`} />
@@ -317,14 +398,23 @@ export default function ProfilScreen() {
           {user?.role === 'MEDECIN' && profil?.specialite ? (
             <InfoRow label="Spécialité" value={specialiteLibelle(profil.specialite)} />
           ) : null}
+          {user?.role === 'MEDECIN' && profil?.fonctionLibelle ? (
+            <InfoRow label="Fonction" value={profil.fonctionLibelle} />
+          ) : null}
+          {user?.role === 'MEDECIN' && profil?.etablissementNom ? (
+            <InfoRow label="Établissement" value={profil.etablissementNom} />
+          ) : null}
           {user?.role === 'MEDECIN' && profil?.adresseCabinet ? (
             <InfoRow label="Cabinet" value={profil.adresseCabinet} />
           ) : null}
           {user?.role === 'MEDECIN' && profil?.regionNom ? (
-            <InfoRow label="Région" value={profil.regionNom} last={!profil?.telephone} />
+            <InfoRow label="Région" value={profil.regionNom} last={!profil?.telephone && !profil?.telephone2} />
           ) : null}
           {user?.role === 'MEDECIN' && profil?.telephone ? (
-            <InfoRow label="Téléphone" value={profil.telephone} last />
+            <InfoRow label="Téléphone" value={formatPhone(profil.telephone)} last={!profil?.telephone2} />
+          ) : null}
+          {user?.role === 'MEDECIN' && profil?.telephone2 ? (
+            <InfoRow label="Téléphone 2" value={formatPhone(profil.telephone2)} last />
           ) : null}
         </View>
       )}

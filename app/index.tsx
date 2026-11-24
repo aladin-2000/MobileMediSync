@@ -9,7 +9,6 @@ import {
   KeyboardAvoidingView,
   ScrollView,
   Platform,
-  Image,
 } from "react-native";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -32,7 +31,7 @@ export default function Index() {
       if (user.mustChangePassword) {
         router.replace("/changer-mot-de-passe");
       } else if (user.role === "MEDECIN") {
-        router.replace("/medecin");
+        router.replace("/medecin/home");
       } else if (user.role === "DELEGUE") {
         router.replace("/delegue/home");
       } else if (user.role === "ADMIN") {
@@ -69,9 +68,6 @@ export default function Index() {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <View style={styles.logoWrapper}>
-            <Image source={require('../assets/images/logo.png')} style={styles.logoImage} />
-          </View>
           <Text style={styles.brand}>MediSync</Text>
           <Text style={styles.tagline}>Gestion des rendez-vous médicaux</Text>
 
@@ -172,18 +168,6 @@ const styles = StyleSheet.create({
     paddingTop: 72,
     paddingBottom: 40,
     paddingHorizontal: 24,
-  },
-  logoWrapper: {
-    width: 100,
-    height: 100,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 14,
-  },
-  logoImage: {
-    width: 100,
-    height: 100,
-    resizeMode: "contain",
   },
   brand: {
     fontSize: 26,

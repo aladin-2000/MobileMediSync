@@ -83,6 +83,11 @@ export default function HeaderMenu({ onLogout }) {
     <>
       <TouchableOpacity style={styles.menuButton} onPress={openSidebar} activeOpacity={0.7}>
         <Text style={styles.menuIcon}>☰</Text>
+        {unreadCount > 0 && (
+          <View style={[styles.notifBadge, styles.menuButtonBadge]}>
+            <Text style={styles.notifBadgeText}>{unreadCount > 99 ? '99+' : unreadCount}</Text>
+          </View>
+        )}
       </TouchableOpacity>
 
       <Modal visible={visible} transparent animationType="none" onRequestClose={() => closeSidebar()}>
@@ -279,6 +284,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 3,
     borderWidth: 1.5,
     borderColor: '#ffffff',
+  },
+  menuButtonBadge: {
+    top: 0,
+    right: 0,
   },
   notifBadgeText: {
     color: '#ffffff',

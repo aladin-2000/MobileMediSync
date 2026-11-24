@@ -7,6 +7,7 @@ import DoctorCard from '../../components/DoctorCard';
 import FilterSection from '../../components/FilterSection';
 import RefreshButton from '../../components/RefreshButton';
 import useConfirmModal from '../../hooks/useConfirmModal';
+import { toISODate } from '../../services/dateUtils';
 
 const MONTHS_FR = [
   'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
@@ -23,7 +24,7 @@ const formatFriendlyDate = (dateStr) => {
   return `${day} ${MONTHS_FR[monthIdx]} ${year}`;
 };
 
-const getTodayString = () => new Date().toISOString().split('T')[0];
+const getTodayString = () => toISODate(new Date());
 
 // The visit date is mandatory: clicking a doctor needs to know which day's
 // slots to show, so the filter always carries a concrete date (defaults to today).

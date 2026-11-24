@@ -8,8 +8,9 @@ import CustomCalendar from '../../components/CustomCalendar';
 import TimePicker from '../../components/TimePicker';
 import RefreshButton from '../../components/RefreshButton';
 import useConfirmModal from '../../hooks/useConfirmModal';
+import { toISODate } from '../../services/dateUtils';
 
-const getTodayString = () => new Date().toISOString().split('T')[0];
+const getTodayString = () => toISODate(new Date());
 
 const TEMPLATES = {
   matin: { label: 'Matin', heureDebut: '09:00', heureFin: '12:00' },
@@ -326,7 +327,7 @@ export default function DisponibilitesScreen() {
           onChange={(event, selected) => {
             if (Platform.OS === 'android') setShowDatePicker(null);
             if (event.type !== 'dismissed' && selected) {
-              const iso = selected.toISOString().split('T')[0];
+              const iso = toISODate(selected);
               if (showDatePicker === 'debut') {
                 setDateDebut(iso);
                 if (iso > dateFin) setDateFin(iso);

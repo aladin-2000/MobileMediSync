@@ -1,5 +1,6 @@
 // components/AppointmentCard.js
 import React from 'react';
+import { formatPhone } from '../utils/phone';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 
 /**
@@ -46,8 +47,12 @@ export default function AppointmentCard({ appointment, role = 'DELEGUE', onAnnul
           <Text style={styles.docName}>{person?.nom}</Text>
           {person?.laboName ? <Text style={styles.laboName}>{person.laboName}</Text> : null}
           {person?.specialite ? <Text style={styles.docSpecialty}>{person.specialite}</Text> : null}
+          {person?.fonction || person?.etablissement ? (
+            <Text style={styles.docAddress}>{[person.fonction, person.etablissement].filter(Boolean).join(' · ')}</Text>
+          ) : null}
           {person?.adresse ? <Text style={styles.docAddress}>{person.adresse}</Text> : null}
-          {person?.telephone ? <Text style={styles.docAddress}>{person.telephone}</Text> : null}
+          {person?.telephone ? <Text style={styles.docAddress}>{formatPhone(person.telephone)}</Text> : null}
+          {person?.telephone2 ? <Text style={styles.docAddress}>{formatPhone(person.telephone2)}</Text> : null}
           {isModifiable && dejaConfirmeParMoi && (
             <Text style={styles.pendingHint}>En attente de confirmation de l’autre partie</Text>
           )}

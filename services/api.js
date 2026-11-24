@@ -13,6 +13,16 @@ export async function getRegions() {
   return apiRequest('/medecins/regions', { auth: false });
 }
 
+/** GET /medecins/fonctions — liste des fonctions (valeur + libellé), pour l'inscription / le profil médecin. */
+export async function getFonctions() {
+  return apiRequest('/medecins/fonctions', { auth: false });
+}
+
+/** GET /etablissements — liste des établissements (id, nom, région…), pour l'inscription / le profil médecin. */
+export async function getEtablissements() {
+  return apiRequest('/etablissements', { auth: false });
+}
+
 /** GET /api/laboratoires — liste des laboratoires, pour le sélecteur d'inscription délégué. */
 export async function getLaboratoires() {
   return apiRequest('/api/laboratoires', { auth: false });
@@ -47,7 +57,8 @@ export async function getMesNotifications() {
 
 /** GET /api/notifications/non-lues/nombre — nombre de notifications non lues. */
 export async function getNombreNotificationsNonLues() {
-  return apiRequest('/api/notifications/non-lues/nombre');
+  const { nombre } = await apiRequest('/api/notifications/non-lues/nombre');
+  return nombre;
 }
 
 /** PATCH /api/notifications/{id}/lue — marque une notification comme lue. */
@@ -180,6 +191,8 @@ export async function getDelegueById(id) {
 // l'heure du créneau) : on complète chaque RDV avec un appel créneau + médecin (côté délégué) ou
 // créneau + délégué (côté médecin), en réutilisant AppointmentCard.js tel quel côté affichage.
 async function enrichirRendezVous(rendezVousList, role) {
+  // laboName n'est renseigné que pour un nom saisi librement : un délégué rattaché n'a que laboratoireId.
+  const laboratoires = role === 'MEDECIN' ? await getLaboratoires().catch(() => []) : [];
   return Promise.all(
     rendezVousList.map(async (rdv) => {
       const [creneau, personne] = await Promise.all([
@@ -197,8 +210,8 @@ async function enrichirRendezVous(rendezVousList, role) {
         realiseParDelegue: rdv.realiseParDelegue,
         realiseParMedecin: rdv.realiseParMedecin,
         ...(role === 'MEDECIN'
-          ? { delegue: { nom: `${personne.prenom} ${personne.nom}`, telephone: personne.telephone, laboName: personne.laboName || '' } }
-          : { medecin: { nom: `Dr. ${personne.prenom} ${personne.nom}`, specialite: personne.specialite, adresse: personne.adresseCabinet } }),
+          ? { delegue: { nom: `${personne.prenom} ${personne.nom}`, telephone: personne.telephone, telephone2: personne.telephone2, laboName: personne.laboName || laboratoires.find((labo) => labo.id === personne.laboratoireId)?.nom || '' } }
+          : { medecin: { nom: `Dr. ${personne.prenom} ${personne.nom}`, specialite: personne.specialite, adresse: personne.adresseCabinet, fonction: personne.fonctionLibelle, etablissement: personne.etablissementNom } }),
       };
     })
   );
@@ -310,4 +323,16 @@ export async function getSemaineMedecin(medecinId, mondayDate) {
     days.push({ label: labels[i], date, creneaux: daySlots });
   }
   return days;
+}
+
+// ---- Notes à l'équipe MediSync (médecin / délégué) ----
+
+/** POST /api/notes-equipe — envoie une note (avis, idée) à l'équipe MediSync. */
+export async function envoyerNoteEquipe(contenu) {
+  return apiRequest('/api/notes-equipe', { method: 'POST', body: { contenu } });
+}
+
+/** GET /api/notes-equipe/mes-notes — notes envoyées par l'utilisateur connecté (plus récentes d'abord). */
+export async function getMesNotesEquipe() {
+  return apiRequest('/api/notes-equipe/mes-notes');
 }

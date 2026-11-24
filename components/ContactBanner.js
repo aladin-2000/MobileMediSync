@@ -7,7 +7,7 @@ export default function ContactBanner() {
         Pour plus d'info contactez-nous
       </Text>
       <Text style={styles.details}>
-        Email : noreply@medisync.tn  |  Tél : 22 460 401
+        Email : contact@medisync.tn  |  Tél : 22 460 401
       </Text>
     </View>
   );

@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, Modal, ScrollView } from 'react-native';
 import CustomCalendar from './CustomCalendar';
 import TimePicker from './TimePicker';
+import { toISODate } from '../services/dateUtils';
 
 const MONTHS_FR = [
   'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
@@ -18,7 +19,7 @@ const formatFriendlyDate = (dateStr) => {
   return `${day} ${MONTHS_FR[monthIdx]} ${year}`;
 };
 
-const getTodayString = () => new Date().toISOString().split('T')[0];
+const getTodayString = () => toISODate(new Date());
 
 export default function FilterSection({ filters, onFilterChange, onReset, onApply, specialites = [], regions = [] }) {
   const [calendarTarget, setCalendarTarget] = useState(null); // 'dateDebut' | 'dateFin' | null

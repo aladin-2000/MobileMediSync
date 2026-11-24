@@ -6,6 +6,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "../context/AuthContext";
 import * as authService from "../services/authService";
 import useConfirmModal from "../hooks/useConfirmModal";
+import PasswordStrength from "../components/PasswordStrength";
+import { passwordError } from "../utils/passwordPolicy";
 
 export default function ChangerMotDePasseScreen() {
   const { user, markPasswordChanged } = useAuth();
@@ -18,6 +20,11 @@ export default function ChangerMotDePasseScreen() {
   const handleSubmit = async () => {
     if (!newPassword || !confirmPassword) {
       notify({ title: "Champs requis", message: "Veuillez remplir tous les champs.", variant: "warning" });
+      return;
+    }
+    const pwdError = passwordError(newPassword);
+    if (pwdError) {
+      notify({ title: "Mot de passe trop faible", message: pwdError, variant: "warning" });
       return;
     }
     if (newPassword !== confirmPassword) {
@@ -38,7 +45,7 @@ export default function ChangerMotDePasseScreen() {
     try {
       await authService.changerMotDePasse(newPassword);
       markPasswordChanged();
-      if (user.role === "MEDECIN") router.replace("/medecin");
+      if (user.role === "MEDECIN") router.replace("/medecin/home");
       else if (user.role === "DELEGUE") router.replace("/delegue/home");
       else if (user.role === "ADMIN") router.replace("/admin");
     } catch (error) {
@@ -55,7 +62,8 @@ export default function ChangerMotDePasseScreen() {
         <Text style={styles.subtitle}>Choisissez un nouveau mot de passe avant de continuer.</Text>
 
         <Text>Nouveau mot de passe</Text>
-        <TextInput style={styles.input} value={newPassword} onChangeText={setNewPassword} secureTextEntry placeholder="Choisissez un nouveau mot de passe" />
+        <TextInput style={styles.input} value={newPassword} onChangeText={setNewPassword} secureTextEntry placeholder="10 caractères min." />
+        <PasswordStrength password={newPassword} style={{ marginTop: -4, marginBottom: 12 }} />
 
         <Text>Confirmer le mot de passe</Text>
         <TextInput style={styles.input} value={confirmPassword} onChangeText={setConfirmPassword} secureTextEntry placeholder="Retapez le nouveau mot de passe" />
